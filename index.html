@@ -725,6 +725,199 @@
   .attr a:hover { color: var(--gold); }
 
   /* ── Footer ───────────────────────────────────────────── */
+  /* ── Tournament / Pairings ────────────────────────────── */
+  .tourney-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .tourney-add-row input {
+    flex: 1;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    padding: 0.55rem 0.85rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tourney-add-row input:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.12);
+  }
+  .btn-accent {
+    background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+    border: none;
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+    transition: filter 0.15s, transform 0.12s;
+  }
+  .btn-accent:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accent:disabled { opacity: 0.4; cursor: default; filter: none; transform: none; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    color: var(--text-mid);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .btn-ghost:disabled { opacity: 0.35; cursor: default; }
+
+  .player-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 0.5rem; }
+  .player-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 6px 5px 13px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .player-tag .pt-remove {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; line-height: 1;
+    display: flex; align-items: center; padding: 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .player-tag .pt-remove:hover { color: var(--ruby); background: rgba(176,48,80,0.15); }
+  .player-count { font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin-bottom: 1rem; }
+
+  .tourney-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+
+  .round-block { margin-bottom: 1.5rem; }
+  .round-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .round-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent-light);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .round-status { font-size: 0.72rem; color: var(--text-dim); font-style: italic; }
+
+  .match-card {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.7rem 1rem;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .match-card.decided { border-color: var(--accent-dim); }
+  .match-player {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    color: var(--text);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .match-player:hover { background: var(--surface); border-color: var(--border-hi); }
+  .match-player.left { justify-content: flex-end; text-align: right; }
+  .match-player.right { justify-content: flex-start; }
+  .match-player.winner {
+    background: rgba(var(--accent-rgb),0.12);
+    border-color: var(--accent-dim);
+    color: var(--accent-light);
+    font-weight: 600;
+  }
+  .match-player .wl-record { font-size: 0.7rem; color: var(--text-dim); font-style: italic; }
+  .match-player.winner .wl-record { color: var(--accent); }
+  .vs-pill {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+  }
+  .match-bye {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    color: var(--text-mid);
+    font-size: 0.95rem;
+  }
+  .match-bye strong { color: var(--accent-light); font-style: normal; }
+
+  .standings-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .standings-table th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .standings-table th.num, .standings-table td.num { text-align: center; }
+  .standings-table td {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.98rem;
+    color: var(--text);
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .standings-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table .rank { color: var(--accent-light); font-weight: 600; width: 38px; }
+  .standings-table .rank-1 { color: var(--accent-light); }
+  .standings-table .pts { color: var(--accent-light); font-weight: 600; }
+
+  .tourney-empty { text-align: center; padding: 1.5rem 0; color: var(--text-dim); font-style: italic; font-size: 0.95rem; }
+  .subsection-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin: 1.5rem 0 0.75rem;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .subsection-label::after { content:''; flex:1; height:1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+  @media (max-width: 480px) {
+    .match-card { grid-template-columns: 1fr; gap: 6px; }
+    .match-player.left { justify-content: flex-start; text-align: left; }
+    .vs-pill { justify-self: center; }
+  }
+
   .site-footer {
     text-align: center; padding: 2rem;
     color: var(--text-dim); font-size: 0.75rem;
@@ -963,6 +1156,49 @@
         <i class="ti ti-cards"></i>
         <p>Select a set above to load card data</p>
       </div>
+    </div>
+  </div>
+  <!-- ── TOURNAMENT / PAIRINGS ──────────────────────────── -->
+  <div class="panel">
+    <p class="section-label"><i class="ti ti-swords"></i> Draft Tournament — Swiss Pairings</p>
+
+    <div class="tourney-add-row">
+      <input type="text" id="playerNameInput" placeholder="Enter drafter name…" maxlength="40"
+             onkeydown="if(event.key==='Enter'){addPlayer();}">
+      <button class="btn-accent" onclick="addPlayer()"><i class="ti ti-user-plus"></i> Add</button>
+    </div>
+
+    <div id="playerList" class="player-list"></div>
+    <p id="playerCount" class="player-count">No drafters added yet.</p>
+
+    <div class="tourney-actions">
+      <button class="btn-accent" id="startBtn" onclick="startTournament()" disabled>
+        <i class="ti ti-flag"></i> Start Tournament
+      </button>
+      <button class="btn-ghost" id="nextRoundBtn" onclick="nextRound()" style="display:none">
+        <i class="ti ti-arrow-right"></i> Generate Next Round
+      </button>
+      <button class="btn-ghost" id="resetBtn" onclick="resetTournament()" style="display:none">
+        <i class="ti ti-refresh"></i> Reset
+      </button>
+    </div>
+
+    <div id="roundsContainer"></div>
+
+    <div id="standingsBlock" style="display:none">
+      <p class="subsection-label"><i class="ti ti-list-numbers"></i> Standings</p>
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Drafter</th>
+            <th class="num">W</th>
+            <th class="num">L</th>
+            <th class="num">Pts</th>
+          </tr>
+        </thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1409,6 +1645,267 @@ buildThemeMenu();
   const saved = localStorage.getItem('mtg-theme');
   setTheme(saved || 'dimir');
 })();
+
+
+// ════════════════════════════════════════════════════════════
+//  DRAFT TOURNAMENT — Swiss-style pairing engine
+// ════════════════════════════════════════════════════════════
+const BYE = "__BYE__";
+let tourney = {
+  players: [],     // [{id, name, wins, losses, byes, oppIds:Set-as-array}]
+  rounds: [],      // [{number, matches:[{a,b,winner}]}]
+  started: false,
+};
+let nextPlayerId = 1;
+
+function tEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function addPlayer() {
+  const inp = document.getElementById("playerNameInput");
+  const name = inp.value.trim();
+  if (!name) return;
+  if (tourney.started) return;
+  // prevent duplicate names (case-insensitive)
+  if (tourney.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    inp.value = "";
+    inp.placeholder = "That name is already added";
+    setTimeout(()=>{ inp.placeholder = "Enter drafter name…"; }, 1500);
+    return;
+  }
+  tourney.players.push({ id: nextPlayerId++, name, wins:0, losses:0, byes:0, oppIds:[] });
+  inp.value = "";
+  inp.focus();
+  renderPlayers();
+}
+
+function removePlayer(id) {
+  if (tourney.started) return;
+  tourney.players = tourney.players.filter(p => p.id !== id);
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById("playerList");
+  const count = document.getElementById("playerCount");
+  list.innerHTML = tourney.players.map(p =>
+    `<span class="player-tag">${tEsc(p.name)}<button class="pt-remove" onclick="removePlayer(${p.id})" aria-label="Remove ${tEsc(p.name)}"><i class="ti ti-x"></i></button></span>`
+  ).join("");
+  const n = tourney.players.length;
+  count.textContent = n === 0 ? "No drafters added yet."
+    : `${n} drafter${n===1?"":"s"} added${n%2===1?" — odd count, one bye will be assigned each round.":"."}`;
+  document.getElementById("startBtn").disabled = n < 2 || tourney.started;
+}
+
+function getPlayer(id){ return tourney.players.find(p => p.id === id); }
+function points(p){ return p.wins; } // 1 point per win (byes count as a win)
+
+function startTournament() {
+  if (tourney.players.length < 2) return;
+  tourney.started = true;
+  document.getElementById("playerNameInput").disabled = true;
+  document.querySelector(".tourney-add-row .btn-accent").disabled = true;
+  document.getElementById("startBtn").style.display = "none";
+  document.getElementById("nextRoundBtn").style.display = "inline-flex";
+  document.getElementById("resetBtn").style.display = "inline-flex";
+  document.getElementById("standingsBlock").style.display = "block";
+  generateRound(1);
+  renderRounds();
+  renderStandings();
+}
+
+// Fisher-Yates shuffle
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Generate pairings. Round 1 = random. Later rounds = Swiss (group by record,
+// pair within groups, avoid rematches where possible, float odd players down).
+function generateRound(number) {
+  const players = tourney.players.slice();
+  let ordered;
+
+  if (number === 1) {
+    ordered = shuffle(players);
+  } else {
+    // Sort by points desc, then random within equal points for balance
+    const byPts = {};
+    players.forEach(p => { (byPts[points(p)] = byPts[points(p)] || []).push(p); });
+    ordered = [];
+    Object.keys(byPts).map(Number).sort((a,b)=>b-a).forEach(pt => {
+      shuffle(byPts[pt]).forEach(p => ordered.push(p));
+    });
+  }
+
+  const matches = [];
+  const pool = ordered.slice();
+
+  // Assign a bye first if odd: give it to the lowest-ranked player who hasn't had one
+  if (pool.length % 2 === 1) {
+    let byeIdx = -1;
+    for (let i = pool.length - 1; i >= 0; i--) {
+      if (pool[i].byes === 0) { byeIdx = i; break; }
+    }
+    if (byeIdx === -1) byeIdx = pool.length - 1; // everyone has had a bye; give to last
+    const byePlayer = pool.splice(byeIdx, 1)[0];
+    matches.push({ a: byePlayer.id, b: BYE, winner: byePlayer.id });
+  }
+
+  // Pair remaining: walk down the ordered pool, match each with the nearest
+  // opponent they haven't already played; fall back to next available.
+  const used = new Set();
+  for (let i = 0; i < pool.length; i++) {
+    if (used.has(pool[i].id)) continue;
+    const p = pool[i];
+    used.add(p.id);
+    let opp = null;
+    // first try: nearest not-yet-used, not-already-played
+    for (let j = i + 1; j < pool.length; j++) {
+      if (used.has(pool[j].id)) continue;
+      if (!p.oppIds.includes(pool[j].id)) { opp = pool[j]; break; }
+    }
+    // fallback: nearest not-yet-used (allow rematch)
+    if (!opp) {
+      for (let j = i + 1; j < pool.length; j++) {
+        if (!used.has(pool[j].id)) { opp = pool[j]; break; }
+      }
+    }
+    if (opp) {
+      used.add(opp.id);
+      matches.push({ a: p.id, b: opp.id, winner: null });
+    }
+  }
+
+  tourney.rounds.push({ number, matches });
+}
+
+function currentRound(){ return tourney.rounds[tourney.rounds.length - 1]; }
+function roundComplete(r){ return r.matches.every(m => m.winner !== null); }
+
+function setWinner(roundNumber, matchIdx, winnerId) {
+  const round = tourney.rounds.find(r => r.number === roundNumber);
+  if (!round) return;
+  const m = round.matches[matchIdx];
+  if (m.b === BYE) return; // byes are fixed
+  // Only allow editing the most recent round to keep records consistent
+  if (round.number !== currentRound().number) return;
+  m.winner = (m.winner === winnerId) ? null : winnerId; // toggle
+  recomputeRecords();
+  renderRounds();
+  renderStandings();
+}
+
+// Recompute all W/L/bye/opponent data from scratch across all rounds
+function recomputeRecords() {
+  tourney.players.forEach(p => { p.wins=0; p.losses=0; p.byes=0; p.oppIds=[]; });
+  tourney.rounds.forEach(round => {
+    round.matches.forEach(m => {
+      if (m.b === BYE) {
+        const a = getPlayer(m.a);
+        if (a) { a.wins++; a.byes++; }
+        return;
+      }
+      const a = getPlayer(m.a), b = getPlayer(m.b);
+      if (a && b) {
+        a.oppIds.push(b.id);
+        b.oppIds.push(a.id);
+        if (m.winner === a.id) { a.wins++; b.losses++; }
+        else if (m.winner === b.id) { b.wins++; a.losses++; }
+      }
+    });
+  });
+}
+
+function nextRound() {
+  const cur = currentRound();
+  if (!cur) return;
+  if (!roundComplete(cur)) {
+    const btn = document.getElementById("nextRoundBtn");
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-alert-triangle"></i> Finish current round first';
+    setTimeout(()=>{ btn.innerHTML = orig; }, 1800);
+    return;
+  }
+  generateRound(cur.number + 1);
+  renderRounds();
+  renderStandings();
+}
+
+function resetTournament() {
+  tourney = { players: tourney.players.map(p => ({...p, wins:0, losses:0, byes:0, oppIds:[]})), rounds: [], started: false };
+  document.getElementById("playerNameInput").disabled = false;
+  document.querySelector(".tourney-add-row .btn-accent").disabled = false;
+  document.getElementById("startBtn").style.display = "inline-flex";
+  document.getElementById("nextRoundBtn").style.display = "none";
+  document.getElementById("resetBtn").style.display = "none";
+  document.getElementById("standingsBlock").style.display = "none";
+  document.getElementById("roundsContainer").innerHTML = "";
+  renderPlayers();
+}
+
+function recordStr(p){ return `${p.wins}–${p.losses}`; }
+
+function renderRounds() {
+  const c = document.getElementById("roundsContainer");
+  if (!tourney.rounds.length) { c.innerHTML = ""; return; }
+  let h = "";
+  tourney.rounds.forEach(round => {
+    const isCurrent = round.number === currentRound().number;
+    const done = roundComplete(round);
+    h += `<div class="round-block">
+      <div class="round-head">
+        <span class="round-title"><i class="ti ti-cards"></i> Round ${round.number}</span>
+        <span class="round-status">${done ? '<i class="ti ti-circle-check"></i> Complete' : 'In progress — tap a winner'}</span>
+      </div>`;
+    round.matches.forEach((m, idx) => {
+      if (m.b === BYE) {
+        const a = getPlayer(m.a);
+        h += `<div class="match-card decided"><div class="match-bye"><strong>${tEsc(a.name)}</strong> receives a bye <i class="ti ti-coffee"></i></div></div>`;
+        return;
+      }
+      const a = getPlayer(m.a), b = getPlayer(m.b);
+      const aWin = m.winner === a.id, bWin = m.winner === b.id;
+      const clickable = isCurrent;
+      const aClick = clickable ? `onclick="setWinner(${round.number},${idx},${a.id})"` : "";
+      const bClick = clickable ? `onclick="setWinner(${round.number},${idx},${b.id})"` : "";
+      h += `<div class="match-card ${m.winner!==null?'decided':''}">
+        <div class="match-player left ${aWin?'winner':''}" ${aClick}>
+          <span>${tEsc(a.name)} <span class="wl-record">(${recordStr(a)})</span></span>
+          ${aWin?'<i class="ti ti-crown"></i>':''}
+        </div>
+        <span class="vs-pill">VS</span>
+        <div class="match-player right ${bWin?'winner':''}" ${bClick}>
+          ${bWin?'<i class="ti ti-crown"></i>':''}
+          <span>${tEsc(b.name)} <span class="wl-record">(${recordStr(b)})</span></span>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  c.innerHTML = h;
+}
+
+function renderStandings() {
+  const body = document.getElementById("standingsBody");
+  const sorted = tourney.players.slice().sort((a,b) =>
+    b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name)
+  );
+  body.innerHTML = sorted.map((p, i) =>
+    `<tr>
+      <td class="num rank ${i===0?'rank-1':''}">${i+1}</td>
+      <td>${tEsc(p.name)}${p.byes>0?` <span class="wl-record" style="font-size:0.7rem;color:var(--text-dim)">(${p.byes} bye${p.byes>1?'s':''})</span>`:''}</td>
+      <td class="num">${p.wins}</td>
+      <td class="num">${p.losses}</td>
+      <td class="num pts">${points(p)}</td>
+    </tr>`
+  ).join("");
+}
+
+renderPlayers();
 
 </script>
 </body>
