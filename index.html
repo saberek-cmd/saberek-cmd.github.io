@@ -381,7 +381,7 @@
   .archetypes-wrap { margin-bottom: 0.5rem; }
   .archetype-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 8px;
   }
   .archetype-chip {
@@ -397,7 +397,7 @@
     transform: translateY(-1px);
     background: var(--surface);
   }
-  .archetype-pips { display: flex; gap: 3px; flex-shrink: 0; }
+  .archetype-pips { display: flex; gap: 3px; flex-shrink: 0; flex-wrap: nowrap; }
   .mana {
     width: 19px; height: 19px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
@@ -1041,28 +1041,34 @@ const SETS = {
 // Draft archetypes keyed by Scryfall set code. [colors, name]
 // Colors use W U B R G C. Sets without verified data fall back to generic guild pairs.
 const ARCHETYPES = {
-  // ── Bloomburrow ──
-  blb: [["WU","Birds (Flying Support)"],["WB","Bats (Lifegain/Drain)"],["WR","Mice (Aggro/Valiant)"],["WG","Rabbits (Go-wide Tokens)"],["UB","Rats (Aggro/Threshold)"],["UR","Otters (Spells/Prowess)"],["UG","Frogs (Blink/Ramp)"],["BR","Lizards (Sacrifice/Burn)"],["BG","Squirrels (Food/Graveyard)"],["RG","Raccoons (+1/+1 Counters)"]],
-  // ── Murders at Karlov Manor ──
+  // ─── Secrets of Strixhaven (5 enemy-color colleges + 5C Converge) ───
+  sos: [["WB","Silverquill — Targeted Spells (Repartee)"],["UR","Prismari — Spells Matter"],["RW","Lorehold — Artifacts / Spirits"],["GU","Quandrix — +1/+1 Counters (Increment)"],["BG","Witherbloom — Lifegain (Infusion)"],["WUBRG","Converge — 5-Color Value"]],
+  // ─── Lorwyn: Eclipsed (creature-type pairs) ───
+  ecl: [["WU","Fliers / Tempo"],["WB","Kithkin / Lifegain"],["WR","Aggro / Tokens"],["WG","Elves / Go-wide"],["UB","Faeries / Control"],["UR","Spells / Faeries"],["UG","Treefolk / Ramp"],["BR","Goblins / Aggro"],["BG","Graveyard / -1/-1 Counters"],["RG","Elementals / Midrange"]],
+  // ─── Marvel's Spider-Man ───
+  spm: [["WU","Tempo / Web-slinging"],["WB","Lifegain / Heroes"],["WR","Aggro / Team-up"],["WG","Tokens / +1/+1"],["UB","Control / Villains"],["UR","Spells / Symbiote"],["UG","Ramp / Value"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Midrange"],["RG","Big Creatures"]],
+  // ─── Avatar: The Last Airbender (4 nations) ───
+  tla: [["WU","Air Nomads — Evasion / Tempo"],["WB","Lifegain / Balance"],["WR","Fire Nation — Aggro"],["WG","Earth Kingdom — Counters"],["UB","Water Tribe — Control"],["UR","Spells / Bending"],["UG","Ramp / Adapt"],["BR","Fire Nation — Sacrifice"],["BG","Earth — Graveyard / Value"],["RG","Bending / Midrange"]],
+  // ─── Edge of Eternities (standard 10 pairs) ───
+  eoe: [["WU","Spells / Tempo (cast 2nd spell)"],["WB","Lifegain / Stations"],["WR","Aggro / Stations"],["WG","Planets / Counters"],["UB","Control / Void"],["UR","Spells / Artifacts"],["UG","Lander Ramp"],["BR","Void / Sacrifice"],["BG","Void / Graveyard"],["RG","Landers / Big Creatures"]],
+  // ─── Final Fantasy (standard 10 pairs) ───
+  fin: [["WU","Tempo / Job Select"],["WB","Lifegain"],["WR","Equipment Aggro"],["WG","Towns / Counters"],["UB","Control / Saga"],["UR","Spells / Summons"],["UG","Ramp / Summons"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Value"],["RG","Landfall / Midrange"]],
+  // ─── Tarkir: Dragonstorm (5 wedge clans + 5 enemy pairs + Dragons) ───
+  tdm: [["WBG","Abzan — +1/+1 Counters (Endure)"],["URW","Jeskai — Prowess / Flurry"],["BGU","Sultai — Graveyard (Behold)"],["RWB","Mardu — Aggro / Mobilize"],["GUR","Temur — Ramp / Behold"],["WB","Mardu/Abzan — Aggro Counters"],["UR","Jeskai/Temur — Spells"],["BG","Sultai/Abzan — Graveyard"],["RW","Mardu/Jeskai — Aggro"],["GU","Temur/Sultai — Ramp"]],
+  // ─── Aetherdrift (standard 10 pairs + Vehicles/Energy themes) ───
+  dft: [["WU","Vehicles / Tempo"],["WB","Lifegain / Exhaust"],["WR","Vehicles / Aggro"],["WG","Mounts / Counters"],["UB","Max Speed / Control"],["UR","Artifacts / Spells"],["UG","Energy / Ramp"],["BR","Sacrifice / Aggro"],["BG","Energy / Value"],["RG","Vehicles / Speed"]],
+  // ─── Innistrad Remastered (tribal pairs) ───
+  inr: [["WU","Spirits / Fliers"],["WB","Tokens / Lifegain"],["WR","Humans / Aggro"],["WG","Humans / Go-wide"],["UB","Zombies / Mill"],["UR","Spells / Instants"],["UG","Self-mill / Ramp"],["BR","Vampires / Aggro"],["BG","Graveyard / Delirium"],["RG","Werewolves / Midrange"]],
+  // ─── Foundations (evergreen 10 pairs) ───
+  fdn: [["WU","Fliers / Tempo"],["WB","Lifegain"],["WR","Aggro / Equipment"],["WG","+1/+1 Counters"],["UB","Control / Card Draw"],["UR","Spells"],["UG","Ramp / Landfall"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Value"],["RG","Big Creatures"]],
+  // ─── Duskmourn: House of Horror (standard 10 pairs) ───
+  dsk: [["WU","Rooms / Tempo"],["WB","Lifegain / Delirium"],["WR","Aggro / Impulse"],["WG","Survival / Tokens"],["UB","Survival / Mill"],["UR","Spells / Eerie"],["UG","Eerie / Enchantments"],["BR","Sacrifice / Aggro"],["BG","Delirium / Graveyard"],["RG","Survival / Midrange"]],
+  // ─── Bloomburrow (official creature-type pairs) ───
+  blb: [["WU","Birds — Flying Support"],["WB","Bats — Lifegain / Drain"],["WR","Mice — Aggro / Valiant"],["WG","Rabbits — Go-wide Tokens"],["UB","Rats — Aggro / Threshold"],["UR","Otters — Spells / Prowess"],["UG","Frogs — Blink / Ramp"],["BR","Lizards — Sacrifice / Burn"],["BG","Squirrels — Food / Graveyard"],["RG","Raccoons — +1/+1 Counters"]],
+  // ─── Outlaws of Thunder Junction (standard 10 pairs, Outlaws theme) ───
+  otj: [["WU","Plot / Tempo"],["WB","Lifegain / Outlaws"],["WR","Outlaws / Aggro"],["WG","+1/+1 Counters"],["UB","Crime / Control"],["UR","Spells / Plot"],["UG","Ramp / Big Spells"],["BR","Outlaws / Aggro"],["BG","Crime / Sacrifice"],["RG","Spree / Midrange"]],
+  // ─── Murders at Karlov Manor (standard 10 pairs, Clues/Investigate) ───
   mkm: [["WU","Disguise / Clues"],["WB","Detectives / Lifegain"],["WR","Aggro / Disguise"],["WG","+1/+1 Counters"],["UB","Mill / Surveil"],["UR","Artifacts / Spells"],["UG","Clues / Ramp"],["BR","Sacrifice"],["BG","Clues / Value"],["RG","Big Creatures"]],
-  // ── Outlaws of Thunder Junction ──
-  otj: [["WU","Plot / Tempo"],["WB","Lifegain / Outlaws"],["WR","Outlaws Aggro"],["WG","+1/+1 Counters"],["UB","Crime / Control"],["UR","Spells / Plot"],["UG","Ramp / Big Spells"],["BR","Outlaws Aggro"],["BG","Crime / Sacrifice"],["RG","Spree / Midrange"]],
-  // ── Duskmourn: House of Horror ──
-  dsk: [["WU","Rooms / Tempo"],["WB","Delirium / Lifegain"],["WR","Aggro / Impulse"],["WG","Survival / Tokens"],["UB","Survival / Mill"],["UR","Spells / Eerie"],["UG","Eerie / Enchantments"],["BR","Aggro / Sacrifice"],["BG","Delirium / Graveyard"],["RG","Survival / Midrange"]],
-  // ── MTG Foundations ──
-  fdn: [["WU","Fliers / Tempo"],["WB","Lifegain"],["WR","Aggro"],["WG","+1/+1 Counters"],["UB","Control / Card Draw"],["UR","Spells"],["UG","Ramp / Landfall"],["BR","Aggro / Sacrifice"],["BG","Graveyard / Value"],["RG","Big Creatures"]],
-  // ── Aetherdrift ──
-  dft: [["WU","Vehicles / Tempo"],["WB","Lifegain / Exhaust"],["WR","Vehicles Aggro"],["WG","Mounts / Counters"],["UB","Max Speed / Control"],["UR","Artifacts / Spells"],["UG","Energy / Ramp"],["BR","Aggro / Sacrifice"],["BG","Energy / Value"],["RG","Vehicles / Speed"]],
-  // ── Tarkir: Dragonstorm ──
-  tdm: [["WU","Jeskai Flurry"],["WB","Mardu"],["WR","Mardu Aggro"],["WG","Abzan Counters"],["UB","Sultai Endure"],["UR","Jeskai Spells"],["UG","Temur Ramp"],["BR","Mardu Aggro"],["BG","Sultai Graveyard"],["RG","Temur Behold"]],
-  // ── Edge of Eternities ──
-  eoe: [["WU","Stations / Fliers"],["WB","Lifegain / Void"],["WR","Aggro / Warp"],["WG","Planets / Counters"],["UB","Void / Control"],["UR","Spells / Artifacts"],["UG","Ramp / Spacecraft"],["BR","Sacrifice / Aggro"],["BG","Void / Graveyard"],["RG","Spacecraft / Ramp"]],
-  // ── Final Fantasy ──
-  fin: [["WU","Tempo / Job Select"],["WB","Lifegain"],["WR","Equipment Aggro"],["WG","Counters / Towns"],["UB","Control / Saga"],["UR","Spells / Summons"],["UG","Ramp / Summons"],["BR","Aggro / Sacrifice"],["BG","Graveyard / Value"],["RG","Midrange / Landfall"]],
-  // ── Lorwyn: Eclipsed ──
-  ecl: [["WU","Fliers / Tempo"],["WB","Kithkin / Lifegain"],["WR","Goblins Aggro"],["WG","Elves / Tokens"],["UB","Faeries / Control"],["UR","Spells / Faeries"],["UG","Treefolk / Ramp"],["BR","Goblins / Aggro"],["BG","Graveyard / Value"],["RG","Elementals / Midrange"]],
-  // ── Innistrad Remastered ──
-  inr: [["WU","Spirits / Fliers"],["WB","Lifegain / Tokens"],["WR","Aggro / Humans"],["WG","Humans / Tokens"],["UB","Zombies / Mill"],["UR","Spells / Instants"],["UG","Self-mill / Ramp"],["BR","Vampires / Aggro"],["BG","Graveyard / Delirium"],["RG","Werewolves"]],
 };
 
 // Render archetype grid for the active set code
