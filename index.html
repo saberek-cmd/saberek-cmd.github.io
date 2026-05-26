@@ -203,7 +203,7 @@
     --gold-dim: var(--accent-dim); --glow-gold: var(--accent-glow);
   }
 
-  html { font-size: 16px; scroll-behavior: smooth; }
+  html { font-size: calc(16px * var(--font-scale, 1)); scroll-behavior: smooth; }
 
   body {
     background-color: var(--ink);
@@ -263,7 +263,79 @@
   }
 
   /* ── Layout ───────────────────────────────────────────── */
-  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; transition: max-width 0.3s; }
+
+  /* Grid mode — modules flow side-by-side and snap to columns */
+  main.container.grid-mode {
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (min-width: 1180px) {
+    main.container.grid-mode.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  }
+  main.container.grid-mode .module { margin: 0; }
+  main.container.grid-mode .panel,
+  main.container.grid-mode .grand-total-panel,
+  main.container.grid-mode .metrics-grid { margin-bottom: 0; height: 100%; }
+  /* Let a module span the full width when locked as "wide" */
+  main.container.grid-mode .module.span-full { grid-column: 1 / -1; }
+  @media (max-width: 720px) {
+    main.container.grid-mode { grid-template-columns: 1fr; }
+  }
+
+  /* ── View Control Bar ─────────────────────────────────── */
+  .view-bar {
+    position: fixed;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 30px;
+    padding: 6px 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.55), var(--accent-glow);
+    backdrop-filter: blur(8px);
+    flex-wrap: wrap; justify-content: center;
+    max-width: calc(100vw - 24px);
+  }
+  .view-bar .vb-group {
+    display: flex; align-items: center; gap: 2px;
+    padding: 0 4px;
+  }
+  .view-bar .vb-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+  .view-bar button {
+    background: none; border: none;
+    color: var(--text-mid);
+    cursor: pointer;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .view-bar button:hover { color: var(--accent); background: var(--ink-mid); }
+  .view-bar button.active { color: var(--accent-light); background: rgba(var(--accent-rgb),0.16); }
+  .view-bar button.vb-wide {
+    width: auto; border-radius: 18px; padding: 0 14px; gap: 6px;
+    font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .view-bar .vb-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    min-width: 38px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .view-bar .vb-toggle-icon { font-size: 17px; }
+  @media (max-width: 560px) {
+    .view-bar .vb-collapsible-label { display: none; }
+  }
 
   /* ── Section labels ───────────────────────────────────── */
   .section-label {
@@ -772,6 +844,14 @@
   }
   .btn-accent:hover { filter: brightness(1.12); transform: translateY(-1px); }
   .btn-accent:disabled { opacity: 0.4; cursor: default; filter: none; transform: none; }
+  .btn-lg {
+    font-size: 0.92rem !important;
+    padding: 0.95rem 2.2rem !important;
+    border-radius: var(--radius-lg);
+    letter-spacing: 0.12em;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.4), var(--accent-glow);
+  }
+  .btn-lg i { font-size: 1.2em; }
   .btn-ghost {
     background: none;
     border: 1px solid var(--border-hi);
@@ -1012,6 +1092,45 @@
   }
   .timer-test:hover { color: var(--accent); }
 
+  /* ── Modular drag-to-reorder ──────────────────────────── */
+  .module {
+    position: relative;
+  }
+  .module-handle {
+    position: absolute;
+    top: 10px; right: 12px;
+    z-index: 20;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    cursor: grab;
+    border: 1px solid transparent;
+    background: rgba(0,0,0,0.12);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    opacity: 0.5;
+  }
+  .module:hover .module-handle { opacity: 1; }
+  .module-handle:hover { color: var(--accent); border-color: var(--accent-dim); background: var(--ink-mid); }
+  .module-handle:active { cursor: grabbing; }
+  .module-handle i { font-size: 17px; }
+  .module.dragging { opacity: 0.45; }
+  .module.drag-over::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: -7px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(var(--accent-rgb),0.6);
+    z-index: 30;
+  }
+  .module-handle-hint {
+    /* subtle label shown only on the grand-total which has no section-label */
+  }
+  /* keep grand-total panel handle visible against its lighter bg */
+  .grand-total-panel .module-handle { background: rgba(0,0,0,0.2); }
+
   .site-footer {
     text-align: center; padding: 2rem;
     color: var(--text-dim); font-size: 0.75rem;
@@ -1129,9 +1248,28 @@
 </head>
 <body>
 
+<!-- ── View Control Bar ── -->
+<div class="view-bar" id="viewBar" role="toolbar" aria-label="View controls">
+  <div class="vb-group">
+    <button onclick="adjustFont(-1)" title="Decrease text size" aria-label="Decrease text size"><i class="ti ti-letter-a-small"></i></button>
+    <span class="vb-label" id="fontScaleLabel">100%</span>
+    <button onclick="adjustFont(1)" title="Increase text size" aria-label="Increase text size"><i class="ti ti-letter-a"></i></button>
+  </div>
+  <div class="vb-divider"></div>
+  <div class="vb-group">
+    <button id="layoutColBtn" class="active" onclick="setLayout('column')" title="Single column" aria-label="Single column layout"><i class="ti ti-layout-rows"></i></button>
+    <button id="layoutGridBtn" onclick="setLayout('grid')" title="Side-by-side grid" aria-label="Grid layout"><i class="ti ti-layout-grid"></i></button>
+    <button id="cols3Btn" onclick="toggleThreeCol()" title="Toggle 3 columns" aria-label="Toggle three columns" style="display:none"><i class="ti ti-columns-3"></i></button>
+  </div>
+  <div class="vb-divider"></div>
+  <button class="vb-wide" onclick="resetView()" title="Reset view to default">
+    <i class="ti ti-rotate-2"></i> <span class="vb-collapsible-label">Reset View</span>
+  </button>
+</div>
+
 <header class="site-header">
-  <h1 class="site-title">MTG Draft Party</h1>
-  <p class="site-subtitle">Plan out and play your next Magic: The Gathering draft event</p>
+  <h1 class="site-title">Draft Cost Calculator</h1>
+  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -1301,7 +1439,7 @@
     <p id="playerCount" class="player-count">No drafters added yet.</p>
 
     <div class="tourney-actions">
-      <button class="btn-accent" id="startBtn" onclick="startTournament()" disabled>
+      <button class="btn-accent btn-lg" id="startBtn" onclick="startTournament()" disabled>
         <i class="ti ti-flag"></i> Start Tournament
       </button>
       <button class="btn-ghost" id="nextRoundBtn" onclick="nextRound()" style="display:none">
@@ -1467,7 +1605,7 @@ const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Boos
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:3 }, { place:"2nd", packs:2 }, { place:"3rd", packs:1 }];
+let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -2317,6 +2455,220 @@ updateTimerDisplay();
     if (b) b.remove();
     deferredPrompt = null;
   });
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   Modular layout — drag-to-reorder the main sections.
+   Wraps each top-level block in <main> with a draggable module
+   shell + grip handle. Order persists in localStorage.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  const main = document.querySelector("main.container");
+  if (!main) return;
+
+  // Stable IDs for each section, in source order.
+  const SECTION_IDS = [
+    "mod-set-selection",
+    "mod-metrics",
+    "mod-prizes",
+    "mod-grand-total",
+    "mod-spoiler",
+    "mod-timer",
+    "mod-tournament",
+  ];
+
+  // Collect the original direct-child blocks (excluding scripts/text).
+  const blocks = Array.from(main.children).filter(
+    (n) => n.nodeType === 1 && n.tagName !== "SCRIPT"
+  );
+
+  // Wrap each block in a .module shell with a drag handle.
+  const modules = [];
+  blocks.forEach((block, i) => {
+    const id = SECTION_IDS[i] || ("mod-" + i);
+    const mod = document.createElement("div");
+    mod.className = "module";
+    mod.id = id;
+    mod.setAttribute("draggable", "false"); // only the handle initiates drag
+
+    const handle = document.createElement("div");
+    handle.className = "module-handle";
+    handle.title = "Drag to reorder this section";
+    handle.innerHTML = '<i class="ti ti-grip-vertical"></i>';
+
+    // Dragging is initiated from the handle, applied to the module.
+    handle.addEventListener("mousedown", () => mod.setAttribute("draggable", "true"));
+    handle.addEventListener("touchstart", () => mod.setAttribute("draggable", "true"), { passive: true });
+    mod.addEventListener("dragend", () => mod.setAttribute("draggable", "false"));
+
+    main.insertBefore(mod, block);
+    mod.appendChild(handle);
+    mod.appendChild(block);
+    modules.push(mod);
+  });
+
+  // Remember the original (source) order so Reset View can restore it.
+  const sourceOrder = modules.map((m) => m.id);
+  window.__restoreModuleSourceOrder = function () {
+    sourceOrder.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("module")) main.appendChild(el);
+    });
+  };
+
+  let dragEl = null;
+
+  modules.forEach((mod) => {
+    mod.addEventListener("dragstart", (e) => {
+      dragEl = mod;
+      mod.classList.add("dragging");
+      try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", mod.id); } catch (_) {}
+    });
+    mod.addEventListener("dragend", () => {
+      if (dragEl) dragEl.classList.remove("dragging");
+      modules.forEach((m) => m.classList.remove("drag-over"));
+      dragEl = null;
+      saveOrder();
+    });
+    mod.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!dragEl || dragEl === mod) return;
+      e.dataTransfer.dropEffect = "move";
+      mod.classList.add("drag-over");
+    });
+    mod.addEventListener("dragleave", () => mod.classList.remove("drag-over"));
+    mod.addEventListener("drop", (e) => {
+      e.preventDefault();
+      mod.classList.remove("drag-over");
+      if (!dragEl || dragEl === mod) return;
+      // Insert dragged element before or after target based on pointer position.
+      const rect = mod.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      main.insertBefore(dragEl, after ? mod.nextSibling : mod);
+      saveOrder();
+    });
+  });
+
+  function saveOrder() {
+    const order = Array.from(main.children)
+      .filter((n) => n.classList && n.classList.contains("module"))
+      .map((n) => n.id);
+    try { localStorage.setItem("mtg-section-order", JSON.stringify(order)); } catch (_) {}
+  }
+
+  function restoreOrder() {
+    let order;
+    try { order = JSON.parse(localStorage.getItem("mtg-section-order")); } catch (_) { return; }
+    if (!Array.isArray(order)) return;
+    order.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("module")) main.appendChild(el);
+    });
+  }
+
+  restoreOrder();
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   View Controls — font scaling, grid layout, reset.
+   Persists to localStorage. Reset restores defaults including
+   section order (clears mtg-section-order) and font/layout.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  const MIN_SCALE = 0.75, MAX_SCALE = 1.6, STEP = 0.1;
+  let fontScale = 1;
+  let layout = "column";     // "column" | "grid"
+  let threeCol = false;
+
+  const main = document.querySelector("main.container");
+
+  // ── Font scaling ──
+  window.adjustFont = function (dir) {
+    fontScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, +(fontScale + dir * STEP).toFixed(2)));
+    applyFont();
+    saveView();
+  };
+  function applyFont() {
+    document.documentElement.style.setProperty("--font-scale", fontScale);
+    const lbl = document.getElementById("fontScaleLabel");
+    if (lbl) lbl.textContent = Math.round(fontScale * 100) + "%";
+  }
+
+  // ── Layout ──
+  window.setLayout = function (mode) {
+    layout = mode;
+    applyLayout();
+    saveView();
+  };
+  window.toggleThreeCol = function () {
+    threeCol = !threeCol;
+    applyLayout();
+    saveView();
+  };
+  function applyLayout() {
+    if (!main) return;
+    const colBtn = document.getElementById("layoutColBtn");
+    const gridBtn = document.getElementById("layoutGridBtn");
+    const cols3Btn = document.getElementById("cols3Btn");
+    if (layout === "grid") {
+      main.classList.add("grid-mode");
+      main.classList.toggle("cols-3", threeCol);
+      colBtn && colBtn.classList.remove("active");
+      gridBtn && gridBtn.classList.add("active");
+      if (cols3Btn) { cols3Btn.style.display = ""; cols3Btn.classList.toggle("active", threeCol); }
+    } else {
+      main.classList.remove("grid-mode", "cols-3");
+      colBtn && colBtn.classList.add("active");
+      gridBtn && gridBtn.classList.remove("active");
+      if (cols3Btn) { cols3Btn.style.display = "none"; cols3Btn.classList.remove("active"); }
+    }
+  }
+
+  // ── Reset everything to defaults ──
+  window.resetView = function () {
+    fontScale = 1;
+    layout = "column";
+    threeCol = false;
+    applyFont();
+    applyLayout();
+    // Clear saved section order and restore source order
+    try { localStorage.removeItem("mtg-section-order"); } catch (_) {}
+    if (typeof window.__restoreModuleSourceOrder === "function") {
+      window.__restoreModuleSourceOrder();
+    }
+    saveView();
+    // brief confirmation flash on the reset button
+    const btn = document.querySelector(".view-bar .vb-wide");
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check"></i> <span class="vb-collapsible-label">Done</span>';
+      setTimeout(() => { btn.innerHTML = orig; }, 1200);
+    }
+  };
+
+  // ── Persistence ──
+  function saveView() {
+    try {
+      localStorage.setItem("mtg-view", JSON.stringify({ fontScale, layout, threeCol }));
+    } catch (_) {}
+  }
+  function restoreView() {
+    let v;
+    try { v = JSON.parse(localStorage.getItem("mtg-view")); } catch (_) {}
+    if (v && typeof v === "object") {
+      fontScale = typeof v.fontScale === "number" ? v.fontScale : 1;
+      layout = v.layout === "grid" ? "grid" : "column";
+      threeCol = !!v.threeCol;
+    }
+    applyFont();
+    applyLayout();
+  }
+
+  restoreView();
 })();
 </script>
 
