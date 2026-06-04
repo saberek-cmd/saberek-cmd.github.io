@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MTG Draft Cost Calculator</title>
+
+<!-- ── PWA meta ── -->
+<meta name="description" content="Price out Magic: The Gathering draft events — costs, prizes, set spoilers, archetypes, Swiss pairings, and a draft timer.">
+<meta name="theme-color" content="#0d0d12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Draft Calc">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d0d12'/%3E%3Cpath d='M32 8 L52 18 L52 42 L32 56 L12 42 L12 18 Z' fill='none' stroke='%23c9a84c' stroke-width='2.5'/%3E%3Ctext x='32' y='40' font-family='Georgia,serif' font-size='24' font-weight='bold' fill='%23e8c96a' text-anchor='middle'%3E%24%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d0d12'/%3E%3Cpath d='M32 8 L52 18 L52 42 L32 56 L12 42 L12 18 Z' fill='none' stroke='%23c9a84c' stroke-width='2.5'/%3E%3Ctext x='32' y='40' font-family='Georgia,serif' font-size='24' font-weight='bold' fill='%23e8c96a' text-anchor='middle'%3E%24%3C/text%3E%3C/svg%3E">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -192,7 +203,7 @@
     --gold-dim: var(--accent-dim); --glow-gold: var(--accent-glow);
   }
 
-  html { font-size: 16px; scroll-behavior: smooth; }
+  html { font-size: calc(16px * var(--font-scale, 1)); scroll-behavior: smooth; }
 
   body {
     background-color: var(--ink);
@@ -252,19 +263,91 @@
   }
 
   /* ── Layout ───────────────────────────────────────────── */
-  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; transition: max-width 0.3s; }
+
+  /* Grid mode — modules flow side-by-side and snap to columns */
+  main.container.grid-mode {
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (min-width: 1180px) {
+    main.container.grid-mode.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  }
+  main.container.grid-mode .module { margin: 0; }
+  main.container.grid-mode .panel,
+  main.container.grid-mode .grand-total-panel,
+  main.container.grid-mode .metrics-grid { margin-bottom: 0; height: 100%; }
+  /* Let a module span the full width when locked as "wide" */
+  main.container.grid-mode .module.span-full { grid-column: 1 / -1; }
+  @media (max-width: 720px) {
+    main.container.grid-mode { grid-template-columns: 1fr; }
+  }
+
+  /* ── View Control Bar ─────────────────────────────────── */
+  .view-bar {
+    position: fixed;
+    bottom: 18px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: 30px;
+    padding: 6px 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.55), var(--accent-glow);
+    backdrop-filter: blur(8px);
+    flex-wrap: wrap; justify-content: center;
+    max-width: calc(100vw - 24px);
+  }
+  .view-bar .vb-group {
+    display: flex; align-items: center; gap: 2px;
+    padding: 0 4px;
+  }
+  .view-bar .vb-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+  .view-bar button {
+    background: none; border: none;
+    color: var(--text-mid);
+    cursor: pointer;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .view-bar button:hover { color: var(--accent); background: var(--ink-mid); }
+  .view-bar button.active { color: var(--accent-light); background: rgba(var(--accent-rgb),0.16); }
+  .view-bar button.vb-wide {
+    width: auto; border-radius: 18px; padding: 0 14px; gap: 6px;
+    font-family: 'Cinzel', serif; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .view-bar .vb-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    min-width: 38px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .view-bar .vb-toggle-icon { font-size: 17px; }
+  @media (max-width: 560px) {
+    .view-bar .vb-collapsible-label { display: none; }
+  }
 
   /* ── Section labels ───────────────────────────────────── */
   .section-label {
     font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
+    font-size: 0.92rem;
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--gold-dim);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     margin: 0 0 1rem;
   }
   .section-label::after {
@@ -273,7 +356,7 @@
     height: 1px;
     background: linear-gradient(90deg, var(--border), transparent);
   }
-  .section-label i { color: var(--gold); font-size: 14px; }
+  .section-label i { color: var(--gold); font-size: 20px; }
 
   /* ── Cards / Panels ───────────────────────────────────── */
   .panel {
@@ -301,9 +384,9 @@
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field label {
     font-family: 'Cinzel', serif;
-    font-size: 0.58rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-mid);
   }
@@ -376,6 +459,54 @@
     border: 1px solid var(--border);
   }
 
+
+  /* ── Archetypes & Mana Symbols ────────────────────────── */
+  .archetypes-wrap { margin-bottom: 0.5rem; }
+  .archetype-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+  }
+  .archetype-chip {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    transition: border-color 0.2s, transform 0.12s, background 0.2s;
+  }
+  .archetype-chip:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-1px);
+    background: var(--surface);
+  }
+  .archetype-pips { display: flex; gap: 3px; flex-shrink: 0; flex-wrap: nowrap; }
+  .mana {
+    width: 19px; height: 19px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    box-shadow: inset 0 -1px 2px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.4);
+    border: 0.5px solid rgba(0,0,0,0.25);
+    position: relative;
+  }
+  .mana-W { background: radial-gradient(circle at 38% 32%, #fbf8ec, #d9d2bc); color: #3a3525; }
+  .mana-U { background: radial-gradient(circle at 38% 32%, #b3d7ef, #4f9bd0); color: #0d2c40; }
+  .mana-B { background: radial-gradient(circle at 38% 32%, #b0a7b8, #4a4350); color: #1a1420; }
+  .mana-R { background: radial-gradient(circle at 38% 32%, #f4a08a, #d4543a); color: #4a1206; }
+  .mana-G { background: radial-gradient(circle at 38% 32%, #a8d0a4, #5aa15e); color: #123a16; }
+  .mana-C { background: radial-gradient(circle at 38% 32%, #d8d2c8, #a8a096); color: #2a251c; }
+  .archetype-name {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .archetype-empty {
+    font-style: italic; color: var(--text-dim);
+    font-size: 0.85rem; padding: 4px 0;
+  }
+
   .field-divider {
     border: none;
     border-top: 1px solid var(--border);
@@ -409,8 +540,8 @@
   .metric-card:hover::after { opacity: 1; }
   .metric-label {
     font-family: 'Cinzel', serif;
-    font-size: 0.52rem;
-    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-dim);
     margin-bottom: 6px;
@@ -438,8 +569,8 @@
     border-bottom: 1px solid var(--border);
     margin-bottom: 10px;
     font-family: 'Cinzel', serif;
-    font-size: 0.52rem;
-    letter-spacing: 0.12em;
+    font-size: 0.66rem;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     color: var(--text-dim);
   }
@@ -512,13 +643,13 @@
   }
   .grand-label {
     font-family: 'Cinzel', serif;
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gold-dim);
     margin-bottom: 4px;
   }
-  .grand-breakdown { font-size: 0.78rem; color: var(--text-dim); font-style: italic; }
+  .grand-breakdown { font-size: 0.88rem; color: var(--text-dim); font-style: italic; }
   .grand-value {
     font-family: 'JetBrains Mono', monospace;
     font-size: 2.4rem;
@@ -538,8 +669,8 @@
   .sort-group { display: flex; align-items: center; gap: 8px; }
   .sort-group label {
     font-family: 'Cinzel', serif;
-    font-size: 0.58rem;
-    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-mid);
   }
@@ -677,6 +808,329 @@
   .attr a:hover { color: var(--gold); }
 
   /* ── Footer ───────────────────────────────────────────── */
+  /* ── Tournament / Pairings ────────────────────────────── */
+  .tourney-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .tourney-add-row input {
+    flex: 1;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    padding: 0.55rem 0.85rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .tourney-add-row input:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.12);
+  }
+  .btn-accent {
+    background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+    border: none;
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+    transition: filter 0.15s, transform 0.12s;
+  }
+  .btn-accent:hover { filter: brightness(1.12); transform: translateY(-1px); }
+  .btn-accent:disabled { opacity: 0.4; cursor: default; filter: none; transform: none; }
+  .btn-lg {
+    font-size: 0.92rem !important;
+    padding: 0.95rem 2.2rem !important;
+    border-radius: var(--radius-lg);
+    letter-spacing: 0.12em;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.4), var(--accent-glow);
+  }
+  .btn-lg i { font-size: 1.2em; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    color: var(--text-mid);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: all 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .btn-ghost:disabled { opacity: 0.35; cursor: default; }
+
+  .player-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 0.5rem; }
+  .player-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 6px 5px 13px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .player-tag .pt-remove {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; line-height: 1;
+    display: flex; align-items: center; padding: 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .player-tag .pt-remove:hover { color: var(--ruby); background: rgba(176,48,80,0.15); }
+  .player-count { font-size: 0.78rem; color: var(--text-dim); font-style: italic; margin-bottom: 1rem; }
+
+  .tourney-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+
+  .round-block { margin-bottom: 1.5rem; }
+  .round-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .round-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent-light);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .round-status { font-size: 0.72rem; color: var(--text-dim); font-style: italic; }
+
+  .match-card {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.7rem 1rem;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .match-card.decided { border-color: var(--accent-dim); }
+  .match-player {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    color: var(--text);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .match-player:hover { background: var(--surface); border-color: var(--border-hi); }
+  .match-player.left { justify-content: flex-end; text-align: right; }
+  .match-player.right { justify-content: flex-start; }
+  .match-player.winner {
+    background: rgba(var(--accent-rgb),0.12);
+    border-color: var(--accent-dim);
+    color: var(--accent-light);
+    font-weight: 600;
+  }
+  .match-player .wl-record { font-size: 0.7rem; color: var(--text-dim); font-style: italic; }
+  .match-player.winner .wl-record { color: var(--accent); }
+  .vs-pill {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+  }
+  .match-bye {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    color: var(--text-mid);
+    font-size: 0.95rem;
+  }
+  .match-bye strong { color: var(--accent-light); font-style: normal; }
+
+  .standings-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .standings-table th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .standings-table th.num, .standings-table td.num { text-align: center; }
+  .standings-table td {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.98rem;
+    color: var(--text);
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .standings-table td.num { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+  .standings-table tr:last-child td { border-bottom: none; }
+  .standings-table .rank { color: var(--accent-light); font-weight: 600; width: 38px; }
+  .standings-table .rank-1 { color: var(--accent-light); }
+  .standings-table .pts { color: var(--accent-light); font-weight: 600; }
+
+  .tourney-empty { text-align: center; padding: 1.5rem 0; color: var(--text-dim); font-style: italic; font-size: 0.95rem; }
+  .subsection-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+    margin: 1.5rem 0 0.75rem;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .subsection-label::after { content:''; flex:1; height:1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+  @media (max-width: 480px) {
+    .match-card { grid-template-columns: 1fr; gap: 6px; }
+    .match-player.left { justify-content: flex-start; text-align: left; }
+    .vs-pill { justify-self: center; }
+  }
+
+  /* ── Draft Timer ──────────────────────────────────────── */
+  .timer-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(2.8rem, 9vw, 4.5rem);
+    font-weight: 500;
+    text-align: center;
+    color: var(--accent-light);
+    line-height: 1;
+    margin: 0.5rem 0 1rem;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 24px rgba(var(--accent-rgb),0.3);
+    transition: color 0.3s, text-shadow 0.3s;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-display.warning { color: #f0a040; text-shadow: 0 0 24px rgba(240,160,64,0.4); }
+  .timer-display.danger {
+    color: var(--ruby);
+    text-shadow: 0 0 28px rgba(176,48,80,0.5);
+    animation: timerPulse 1s ease-in-out infinite;
+  }
+  .timer-display.finished {
+    color: var(--ruby);
+    animation: timerFlash 0.6s ease-in-out infinite;
+  }
+  @keyframes timerPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+  @keyframes timerFlash { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .timer-presets { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 1rem; }
+  .preset-btn {
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-mid);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+  .preset-btn.active {
+    background: rgba(var(--accent-rgb),0.14);
+    border-color: var(--accent-dim);
+    color: var(--accent-light);
+  }
+  .timer-custom { display: flex; align-items: center; gap: 6px; }
+  .timer-custom input {
+    width: 56px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    text-align: center;
+    outline: none;
+  }
+  .timer-custom input:focus { border-color: var(--accent-dim); }
+  .timer-custom span { font-size: 0.7rem; color: var(--text-dim); font-family: 'Cinzel', serif; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .timer-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .timer-controls .btn-accent, .timer-controls .btn-ghost { padding: 0.55rem 1.3rem; font-size: 0.64rem; }
+  .timer-sound-row {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 0.78rem; color: var(--text-dim); font-style: italic;
+  }
+  .timer-sound-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .timer-sound-row select {
+    background: var(--ink-mid); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text);
+    font-family: 'Crimson Pro', serif; font-size: 0.85rem;
+    padding: 3px 8px; outline: none; cursor: pointer;
+  }
+  .timer-test {
+    background: none; border: none; color: var(--accent-dim);
+    cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;
+    font-style: italic; font-family: 'Crimson Pro', serif;
+  }
+  .timer-test:hover { color: var(--accent); }
+
+  /* ── Modular drag-to-reorder ──────────────────────────── */
+  .module {
+    position: relative;
+  }
+  .module-handle {
+    position: absolute;
+    top: 10px; right: 12px;
+    z-index: 20;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    cursor: grab;
+    border: 1px solid transparent;
+    background: rgba(0,0,0,0.12);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    opacity: 0.5;
+  }
+  .module:hover .module-handle { opacity: 1; }
+  .module-handle:hover { color: var(--accent); border-color: var(--accent-dim); background: var(--ink-mid); }
+  .module-handle:active { cursor: grabbing; }
+  .module-handle i { font-size: 17px; }
+  .module.dragging { opacity: 0.45; }
+  .module.drag-over::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: -7px;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(var(--accent-rgb),0.6);
+    z-index: 30;
+  }
+  .module-handle-hint {
+    /* subtle label shown only on the grand-total which has no section-label */
+  }
+  /* keep grand-total panel handle visible against its lighter bg */
+  .grand-total-panel .module-handle { background: rgba(0,0,0,0.2); }
+
   .site-footer {
     text-align: center; padding: 2rem;
     color: var(--text-dim); font-size: 0.75rem;
@@ -794,9 +1248,28 @@
 </head>
 <body>
 
+<!-- ── View Control Bar ── -->
+<div class="view-bar" id="viewBar" role="toolbar" aria-label="View controls">
+  <div class="vb-group">
+    <button onclick="adjustFont(-1)" title="Decrease text size" aria-label="Decrease text size"><i class="ti ti-letter-a-small"></i></button>
+    <span class="vb-label" id="fontScaleLabel">100%</span>
+    <button onclick="adjustFont(1)" title="Increase text size" aria-label="Increase text size"><i class="ti ti-letter-a"></i></button>
+  </div>
+  <div class="vb-divider"></div>
+  <div class="vb-group">
+    <button id="layoutColBtn" class="active" onclick="setLayout('column')" title="Single column" aria-label="Single column layout"><i class="ti ti-layout-rows"></i></button>
+    <button id="layoutGridBtn" onclick="setLayout('grid')" title="Side-by-side grid" aria-label="Grid layout"><i class="ti ti-layout-grid"></i></button>
+    <button id="cols3Btn" onclick="toggleThreeCol()" title="Toggle 3 columns" aria-label="Toggle three columns" style="display:none"><i class="ti ti-columns-3"></i></button>
+  </div>
+  <div class="vb-divider"></div>
+  <button class="vb-wide" onclick="resetView()" title="Reset view to default">
+    <i class="ti ti-rotate-2"></i> <span class="vb-collapsible-label">Reset View</span>
+  </button>
+</div>
+
 <header class="site-header">
-  <h1 class="site-title">Draft Cost Calculator</h1>
-  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
+  <h1 class="site-title">MTG Draft Tools</h1>
+  <p class="site-subtitle">Plan and play your next Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -830,6 +1303,12 @@
       <span class="type-badge" id="setBadge"></span>
       <span class="set-year" id="setYear"></span>
       <span class="src-pill" id="srcTag" style="display:none"></span>
+    </div>
+
+    <div id="archetypesSection" class="archetypes-wrap" style="display:none">
+      <hr class="field-divider">
+      <p class="section-label"><i class="ti ti-affiliate"></i> Draft Archetypes</p>
+      <div class="archetype-grid" id="archetypeGrid"></div>
     </div>
 
     <hr class="field-divider">
@@ -911,6 +1390,84 @@
       </div>
     </div>
   </div>
+  <!-- ── DRAFT TIMER ────────────────────────────────────── -->
+  <div class="panel">
+    <p class="section-label"><i class="ti ti-clock-hour-4"></i> Draft Timer</p>
+
+    <div class="timer-display" id="timerDisplay">00:00</div>
+
+    <div class="timer-presets" id="timerPresets">
+      <button class="preset-btn" data-sec="30"  onclick="setTimerPreset(30,this)">0:30 / Pick</button>
+      <button class="preset-btn active" data-sec="50" onclick="setTimerPreset(50,this)">0:50 / Pick</button>
+      <button class="preset-btn" data-sec="90"  onclick="setTimerPreset(90,this)">1:30</button>
+      <button class="preset-btn" data-sec="300" onclick="setTimerPreset(300,this)">5:00</button>
+      <button class="preset-btn" data-sec="1500" onclick="setTimerPreset(1500,this)">25:00 / Round</button>
+      <div class="timer-custom">
+        <input type="number" id="timerCustomMin" min="0" max="180" placeholder="min" oninput="setTimerCustom()">
+        <span>min</span>
+      </div>
+    </div>
+
+    <div class="timer-controls">
+      <button class="btn-accent" id="timerStartBtn" onclick="toggleTimer()"><i class="ti ti-player-play"></i> Start</button>
+      <button class="btn-ghost" onclick="resetTimer()"><i class="ti ti-refresh"></i> Reset</button>
+    </div>
+
+    <div class="timer-sound-row">
+      <label for="timerSound"><i class="ti ti-bell"></i> Alarm:</label>
+      <select id="timerSound">
+        <option value="chime">Chime</option>
+        <option value="bell">Bell Toll</option>
+        <option value="alarm">Alarm Buzz</option>
+        <option value="arpeggio">Arpeggio</option>
+      </select>
+      <button class="timer-test" onclick="testAlarm()"><i class="ti ti-volume"></i> Test</button>
+    </div>
+  </div>
+
+  <!-- ── TOURNAMENT / PAIRINGS ──────────────────────────── -->
+  <div class="panel">
+    <p class="section-label"><i class="ti ti-swords"></i> Draft Tournament — Swiss Pairings</p>
+
+    <div class="tourney-add-row">
+      <input type="text" id="playerNameInput" placeholder="Enter drafter name…" maxlength="40"
+             onkeydown="if(event.key==='Enter'){addPlayer();}">
+      <button class="btn-accent" onclick="addPlayer()"><i class="ti ti-user-plus"></i> Add</button>
+    </div>
+
+    <div id="playerList" class="player-list"></div>
+    <p id="playerCount" class="player-count">No drafters added yet.</p>
+
+    <div class="tourney-actions">
+      <button class="btn-accent btn-lg" id="startBtn" onclick="startTournament()" disabled>
+        <i class="ti ti-flag"></i> Start Tournament
+      </button>
+      <button class="btn-ghost" id="nextRoundBtn" onclick="nextRound()" style="display:none">
+        <i class="ti ti-arrow-right"></i> Generate Next Round
+      </button>
+      <button class="btn-ghost" id="resetBtn" onclick="resetTournament()" style="display:none">
+        <i class="ti ti-refresh"></i> Reset
+      </button>
+    </div>
+
+    <div id="roundsContainer"></div>
+
+    <div id="standingsBlock" style="display:none">
+      <p class="subsection-label"><i class="ti ti-list-numbers"></i> Standings</p>
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Drafter</th>
+            <th class="num">W</th>
+            <th class="num">L</th>
+            <th class="num">Pts</th>
+          </tr>
+        </thead>
+        <tbody id="standingsBody"></tbody>
+      </table>
+    </div>
+  </div>
 
 </main>
 
@@ -983,6 +1540,67 @@ const SETS = {
   ],
 };
 
+
+// Draft archetypes keyed by Scryfall set code. [colors, name]
+// Colors use W U B R G C. Sets without verified data fall back to generic guild pairs.
+const ARCHETYPES = {
+  // ─── Secrets of Strixhaven (5 enemy-color colleges + 5C Converge) ───
+  sos: [["WB","Silverquill — Targeted Spells (Repartee)"],["UR","Prismari — Spells Matter"],["RW","Lorehold — Artifacts / Spirits"],["GU","Quandrix — +1/+1 Counters (Increment)"],["BG","Witherbloom — Lifegain (Infusion)"],["WUBRG","Converge — 5-Color Value"]],
+  // ─── Lorwyn: Eclipsed (creature-type pairs) ───
+  ecl: [["WU","Fliers / Tempo"],["WB","Kithkin / Lifegain"],["WR","Aggro / Tokens"],["WG","Elves / Go-wide"],["UB","Faeries / Control"],["UR","Spells / Faeries"],["UG","Treefolk / Ramp"],["BR","Goblins / Aggro"],["BG","Graveyard / -1/-1 Counters"],["RG","Elementals / Midrange"]],
+  // ─── Marvel's Spider-Man ───
+  spm: [["WU","Tempo / Web-slinging"],["WB","Lifegain / Heroes"],["WR","Aggro / Team-up"],["WG","Tokens / +1/+1"],["UB","Control / Villains"],["UR","Spells / Symbiote"],["UG","Ramp / Value"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Midrange"],["RG","Big Creatures"]],
+  // ─── Avatar: The Last Airbender (4 nations) ───
+  tla: [["WU","Air Nomads — Evasion / Tempo"],["WB","Lifegain / Balance"],["WR","Fire Nation — Aggro"],["WG","Earth Kingdom — Counters"],["UB","Water Tribe — Control"],["UR","Spells / Bending"],["UG","Ramp / Adapt"],["BR","Fire Nation — Sacrifice"],["BG","Earth — Graveyard / Value"],["RG","Bending / Midrange"]],
+  // ─── Edge of Eternities (standard 10 pairs) ───
+  eoe: [["WU","Spells / Tempo (cast 2nd spell)"],["WB","Lifegain / Stations"],["WR","Aggro / Stations"],["WG","Planets / Counters"],["UB","Control / Void"],["UR","Spells / Artifacts"],["UG","Lander Ramp"],["BR","Void / Sacrifice"],["BG","Void / Graveyard"],["RG","Landers / Big Creatures"]],
+  // ─── Final Fantasy (standard 10 pairs) ───
+  fin: [["WU","Tempo / Job Select"],["WB","Lifegain"],["WR","Equipment Aggro"],["WG","Towns / Counters"],["UB","Control / Saga"],["UR","Spells / Summons"],["UG","Ramp / Summons"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Value"],["RG","Landfall / Midrange"]],
+  // ─── Tarkir: Dragonstorm (5 wedge clans + 5 enemy pairs + Dragons) ───
+  tdm: [["WBG","Abzan — +1/+1 Counters (Endure)"],["URW","Jeskai — Prowess / Flurry"],["BGU","Sultai — Graveyard (Behold)"],["RWB","Mardu — Aggro / Mobilize"],["GUR","Temur — Ramp / Behold"],["WB","Mardu/Abzan — Aggro Counters"],["UR","Jeskai/Temur — Spells"],["BG","Sultai/Abzan — Graveyard"],["RW","Mardu/Jeskai — Aggro"],["GU","Temur/Sultai — Ramp"]],
+  // ─── Aetherdrift (standard 10 pairs + Vehicles/Energy themes) ───
+  dft: [["WU","Vehicles / Tempo"],["WB","Lifegain / Exhaust"],["WR","Vehicles / Aggro"],["WG","Mounts / Counters"],["UB","Max Speed / Control"],["UR","Artifacts / Spells"],["UG","Energy / Ramp"],["BR","Sacrifice / Aggro"],["BG","Energy / Value"],["RG","Vehicles / Speed"]],
+  // ─── Innistrad Remastered (tribal pairs) ───
+  inr: [["WU","Spirits / Fliers"],["WB","Tokens / Lifegain"],["WR","Humans / Aggro"],["WG","Humans / Go-wide"],["UB","Zombies / Mill"],["UR","Spells / Instants"],["UG","Self-mill / Ramp"],["BR","Vampires / Aggro"],["BG","Graveyard / Delirium"],["RG","Werewolves / Midrange"]],
+  // ─── Foundations (evergreen 10 pairs) ───
+  fdn: [["WU","Fliers / Tempo"],["WB","Lifegain"],["WR","Aggro / Equipment"],["WG","+1/+1 Counters"],["UB","Control / Card Draw"],["UR","Spells"],["UG","Ramp / Landfall"],["BR","Sacrifice / Aggro"],["BG","Graveyard / Value"],["RG","Big Creatures"]],
+  // ─── Duskmourn: House of Horror (standard 10 pairs) ───
+  dsk: [["WU","Rooms / Tempo"],["WB","Lifegain / Delirium"],["WR","Aggro / Impulse"],["WG","Survival / Tokens"],["UB","Survival / Mill"],["UR","Spells / Eerie"],["UG","Eerie / Enchantments"],["BR","Sacrifice / Aggro"],["BG","Delirium / Graveyard"],["RG","Survival / Midrange"]],
+  // ─── Bloomburrow (official creature-type pairs) ───
+  blb: [["WU","Birds — Flying Support"],["WB","Bats — Lifegain / Drain"],["WR","Mice — Aggro / Valiant"],["WG","Rabbits — Go-wide Tokens"],["UB","Rats — Aggro / Threshold"],["UR","Otters — Spells / Prowess"],["UG","Frogs — Blink / Ramp"],["BR","Lizards — Sacrifice / Burn"],["BG","Squirrels — Food / Graveyard"],["RG","Raccoons — +1/+1 Counters"]],
+  // ─── Outlaws of Thunder Junction (standard 10 pairs, Outlaws theme) ───
+  otj: [["WU","Plot / Tempo"],["WB","Lifegain / Outlaws"],["WR","Outlaws / Aggro"],["WG","+1/+1 Counters"],["UB","Crime / Control"],["UR","Spells / Plot"],["UG","Ramp / Big Spells"],["BR","Outlaws / Aggro"],["BG","Crime / Sacrifice"],["RG","Spree / Midrange"]],
+  // ─── Murders at Karlov Manor (standard 10 pairs, Clues/Investigate) ───
+  mkm: [["WU","Disguise / Clues"],["WB","Detectives / Lifegain"],["WR","Aggro / Disguise"],["WG","+1/+1 Counters"],["UB","Mill / Surveil"],["UR","Artifacts / Spells"],["UG","Clues / Ramp"],["BR","Sacrifice"],["BG","Clues / Value"],["RG","Big Creatures"]],
+};
+
+// Render archetype grid for the active set code
+function renderArchetypes(code) {
+  const section = document.getElementById("archetypesSection");
+  const grid = document.getElementById("archetypeGrid");
+  const list = ARCHETYPES[code];
+  if (!list || !list.length) {
+    section.style.display = "none";
+    grid.innerHTML = "";
+    return;
+  }
+  let h = "";
+  list.forEach(([colors, name]) => {
+    const pips = colors.split("").map(c => `<span class="mana mana-${c}">${c}</span>`).join("");
+    h += `<div class="archetype-chip">
+      <span class="archetype-pips">${pips}</span>
+      <span class="archetype-name">${esc(name)}</span>
+    </div>`;
+  });
+  grid.innerHTML = h;
+  section.style.display = "block";
+}
+
+function hideArchetypes() {
+  const s = document.getElementById("archetypesSection");
+  if (s) s.style.display = "none";
+}
+
 const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Booster":"set", "Jumpstart Booster":"jumpstart" };
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
@@ -1008,6 +1626,7 @@ function onCatChange() {
   const sel = document.getElementById("setName");
   sel.innerHTML = "";
   document.getElementById("setMeta").style.display = "none";
+  hideArchetypes();
   if (!cat || cat === "custom") { sel.innerHTML='<option value="">—</option>'; clearSpoiler(); return; }
   sel.appendChild(Object.assign(document.createElement("option"), { value:"", textContent:"— Select set —" }));
   SETS[cat].forEach((s,i) =>
@@ -1019,7 +1638,7 @@ function onCatChange() {
 function onSetChange() {
   const cat = document.getElementById("setCategory").value;
   const idx = document.getElementById("setName").value;
-  if (!cat || cat==="custom" || idx==="") { document.getElementById("setMeta").style.display="none"; clearSpoiler(); return; }
+  if (!cat || cat==="custom" || idx==="") { document.getElementById("setMeta").style.display="none"; hideArchetypes(); clearSpoiler(); return; }
   const set = SETS[cat][parseInt(idx)];
   document.getElementById("packsPerBox").value = set.packs;
   const badge = document.getElementById("setBadge");
@@ -1030,6 +1649,7 @@ function onSetChange() {
   document.getElementById("srcTag").style.display = "none";
   recalc();
   loadSpoiler(set.code);
+  renderArchetypes(set.code);
 }
 
 function onSortChange() { sortAndRender(); }
@@ -1293,6 +1913,764 @@ buildThemeMenu();
   setTheme(saved || 'dimir');
 })();
 
+
+// ════════════════════════════════════════════════════════════
+//  DRAFT TOURNAMENT — Swiss-style pairing engine
+// ════════════════════════════════════════════════════════════
+const BYE = "__BYE__";
+let tourney = {
+  players: [],     // [{id, name, wins, losses, byes, oppIds:Set-as-array}]
+  rounds: [],      // [{number, matches:[{a,b,winner}]}]
+  started: false,
+};
+let nextPlayerId = 1;
+
+function tEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function addPlayer() {
+  const inp = document.getElementById("playerNameInput");
+  const name = inp.value.trim();
+  if (!name) return;
+  if (tourney.started) return;
+  // prevent duplicate names (case-insensitive)
+  if (tourney.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    inp.value = "";
+    inp.placeholder = "That name is already added";
+    setTimeout(()=>{ inp.placeholder = "Enter drafter name…"; }, 1500);
+    return;
+  }
+  tourney.players.push({ id: nextPlayerId++, name, wins:0, losses:0, byes:0, oppIds:[] });
+  inp.value = "";
+  inp.focus();
+  renderPlayers();
+}
+
+function removePlayer(id) {
+  if (tourney.started) return;
+  tourney.players = tourney.players.filter(p => p.id !== id);
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById("playerList");
+  const count = document.getElementById("playerCount");
+  list.innerHTML = tourney.players.map(p =>
+    `<span class="player-tag">${tEsc(p.name)}<button class="pt-remove" onclick="removePlayer(${p.id})" aria-label="Remove ${tEsc(p.name)}"><i class="ti ti-x"></i></button></span>`
+  ).join("");
+  const n = tourney.players.length;
+  count.textContent = n === 0 ? "No drafters added yet."
+    : `${n} drafter${n===1?"":"s"} added${n%2===1?" — odd count, one bye will be assigned each round.":"."}`;
+  document.getElementById("startBtn").disabled = n < 2 || tourney.started;
+}
+
+function getPlayer(id){ return tourney.players.find(p => p.id === id); }
+function points(p){ return p.wins; } // 1 point per win (byes count as a win)
+
+function startTournament() {
+  if (tourney.players.length < 2) return;
+  tourney.started = true;
+  document.getElementById("playerNameInput").disabled = true;
+  document.querySelector(".tourney-add-row .btn-accent").disabled = true;
+  document.getElementById("startBtn").style.display = "none";
+  document.getElementById("nextRoundBtn").style.display = "inline-flex";
+  document.getElementById("resetBtn").style.display = "inline-flex";
+  document.getElementById("standingsBlock").style.display = "block";
+  generateRound(1);
+  renderRounds();
+  renderStandings();
+}
+
+// Fisher-Yates shuffle
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Generate pairings. Round 1 = random. Later rounds = Swiss (group by record,
+// pair within groups, avoid rematches where possible, float odd players down).
+function generateRound(number) {
+  const players = tourney.players.slice();
+  let ordered;
+
+  if (number === 1) {
+    ordered = shuffle(players);
+  } else {
+    // Sort by points desc, then random within equal points for balance
+    const byPts = {};
+    players.forEach(p => { (byPts[points(p)] = byPts[points(p)] || []).push(p); });
+    ordered = [];
+    Object.keys(byPts).map(Number).sort((a,b)=>b-a).forEach(pt => {
+      shuffle(byPts[pt]).forEach(p => ordered.push(p));
+    });
+  }
+
+  const matches = [];
+  const pool = ordered.slice();
+
+  // Assign a bye first if odd: give it to the lowest-ranked player who hasn't had one
+  if (pool.length % 2 === 1) {
+    let byeIdx = -1;
+    for (let i = pool.length - 1; i >= 0; i--) {
+      if (pool[i].byes === 0) { byeIdx = i; break; }
+    }
+    if (byeIdx === -1) byeIdx = pool.length - 1; // everyone has had a bye; give to last
+    const byePlayer = pool.splice(byeIdx, 1)[0];
+    matches.push({ a: byePlayer.id, b: BYE, winner: byePlayer.id });
+  }
+
+  // Pair remaining: walk down the ordered pool, match each with the nearest
+  // opponent they haven't already played; fall back to next available.
+  const used = new Set();
+  for (let i = 0; i < pool.length; i++) {
+    if (used.has(pool[i].id)) continue;
+    const p = pool[i];
+    used.add(p.id);
+    let opp = null;
+    // first try: nearest not-yet-used, not-already-played
+    for (let j = i + 1; j < pool.length; j++) {
+      if (used.has(pool[j].id)) continue;
+      if (!p.oppIds.includes(pool[j].id)) { opp = pool[j]; break; }
+    }
+    // fallback: nearest not-yet-used (allow rematch)
+    if (!opp) {
+      for (let j = i + 1; j < pool.length; j++) {
+        if (!used.has(pool[j].id)) { opp = pool[j]; break; }
+      }
+    }
+    if (opp) {
+      used.add(opp.id);
+      matches.push({ a: p.id, b: opp.id, winner: null });
+    }
+  }
+
+  tourney.rounds.push({ number, matches });
+}
+
+function currentRound(){ return tourney.rounds[tourney.rounds.length - 1]; }
+function roundComplete(r){ return r.matches.every(m => m.winner !== null); }
+
+function setWinner(roundNumber, matchIdx, winnerId) {
+  const round = tourney.rounds.find(r => r.number === roundNumber);
+  if (!round) return;
+  const m = round.matches[matchIdx];
+  if (m.b === BYE) return; // byes are fixed
+  // Only allow editing the most recent round to keep records consistent
+  if (round.number !== currentRound().number) return;
+  m.winner = (m.winner === winnerId) ? null : winnerId; // toggle
+  recomputeRecords();
+  renderRounds();
+  renderStandings();
+}
+
+// Recompute all W/L/bye/opponent data from scratch across all rounds
+function recomputeRecords() {
+  tourney.players.forEach(p => { p.wins=0; p.losses=0; p.byes=0; p.oppIds=[]; });
+  tourney.rounds.forEach(round => {
+    round.matches.forEach(m => {
+      if (m.b === BYE) {
+        const a = getPlayer(m.a);
+        if (a) { a.wins++; a.byes++; }
+        return;
+      }
+      const a = getPlayer(m.a), b = getPlayer(m.b);
+      if (a && b) {
+        a.oppIds.push(b.id);
+        b.oppIds.push(a.id);
+        if (m.winner === a.id) { a.wins++; b.losses++; }
+        else if (m.winner === b.id) { b.wins++; a.losses++; }
+      }
+    });
+  });
+}
+
+function nextRound() {
+  const cur = currentRound();
+  if (!cur) return;
+  if (!roundComplete(cur)) {
+    const btn = document.getElementById("nextRoundBtn");
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-alert-triangle"></i> Finish current round first';
+    setTimeout(()=>{ btn.innerHTML = orig; }, 1800);
+    return;
+  }
+  generateRound(cur.number + 1);
+  renderRounds();
+  renderStandings();
+}
+
+function resetTournament() {
+  tourney = { players: tourney.players.map(p => ({...p, wins:0, losses:0, byes:0, oppIds:[]})), rounds: [], started: false };
+  document.getElementById("playerNameInput").disabled = false;
+  document.querySelector(".tourney-add-row .btn-accent").disabled = false;
+  document.getElementById("startBtn").style.display = "inline-flex";
+  document.getElementById("nextRoundBtn").style.display = "none";
+  document.getElementById("resetBtn").style.display = "none";
+  document.getElementById("standingsBlock").style.display = "none";
+  document.getElementById("roundsContainer").innerHTML = "";
+  renderPlayers();
+}
+
+function recordStr(p){ return `${p.wins}–${p.losses}`; }
+
+function renderRounds() {
+  const c = document.getElementById("roundsContainer");
+  if (!tourney.rounds.length) { c.innerHTML = ""; return; }
+  let h = "";
+  tourney.rounds.forEach(round => {
+    const isCurrent = round.number === currentRound().number;
+    const done = roundComplete(round);
+    h += `<div class="round-block">
+      <div class="round-head">
+        <span class="round-title"><i class="ti ti-cards"></i> Round ${round.number}</span>
+        <span class="round-status">${done ? '<i class="ti ti-circle-check"></i> Complete' : 'In progress — tap a winner'}</span>
+      </div>`;
+    round.matches.forEach((m, idx) => {
+      if (m.b === BYE) {
+        const a = getPlayer(m.a);
+        h += `<div class="match-card decided"><div class="match-bye"><strong>${tEsc(a.name)}</strong> receives a bye <i class="ti ti-coffee"></i></div></div>`;
+        return;
+      }
+      const a = getPlayer(m.a), b = getPlayer(m.b);
+      const aWin = m.winner === a.id, bWin = m.winner === b.id;
+      const clickable = isCurrent;
+      const aClick = clickable ? `onclick="setWinner(${round.number},${idx},${a.id})"` : "";
+      const bClick = clickable ? `onclick="setWinner(${round.number},${idx},${b.id})"` : "";
+      h += `<div class="match-card ${m.winner!==null?'decided':''}">
+        <div class="match-player left ${aWin?'winner':''}" ${aClick}>
+          <span>${tEsc(a.name)} <span class="wl-record">(${recordStr(a)})</span></span>
+          ${aWin?'<i class="ti ti-crown"></i>':''}
+        </div>
+        <span class="vs-pill">VS</span>
+        <div class="match-player right ${bWin?'winner':''}" ${bClick}>
+          ${bWin?'<i class="ti ti-crown"></i>':''}
+          <span>${tEsc(b.name)} <span class="wl-record">(${recordStr(b)})</span></span>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  c.innerHTML = h;
+}
+
+function renderStandings() {
+  const body = document.getElementById("standingsBody");
+  const sorted = tourney.players.slice().sort((a,b) =>
+    b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name)
+  );
+  body.innerHTML = sorted.map((p, i) =>
+    `<tr>
+      <td class="num rank ${i===0?'rank-1':''}">${i+1}</td>
+      <td>${tEsc(p.name)}${p.byes>0?` <span class="wl-record" style="font-size:0.7rem;color:var(--text-dim)">(${p.byes} bye${p.byes>1?'s':''})</span>`:''}</td>
+      <td class="num">${p.wins}</td>
+      <td class="num">${p.losses}</td>
+      <td class="num pts">${points(p)}</td>
+    </tr>`
+  ).join("");
+}
+
+renderPlayers();
+
+
+// ════════════════════════════════════════════════════════════
+//  DRAFT TIMER  (Web Audio API — no external sound files needed)
+// ════════════════════════════════════════════════════════════
+let timerTotal = 50;      // selected duration (seconds)
+let timerRemaining = 50;  // current countdown
+let timerInterval = null;
+let timerRunning = false;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) audioCtx = new AC();
+  }
+  return audioCtx;
+}
+
+function fmtTime(s) {
+  s = Math.max(0, Math.round(s));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function updateTimerDisplay() {
+  const d = document.getElementById("timerDisplay");
+  d.textContent = fmtTime(timerRemaining);
+  d.classList.remove("warning","danger","finished");
+  if (timerRemaining <= 0) d.classList.add("finished");
+  else if (timerRemaining <= 5) d.classList.add("danger");
+  else if (timerRemaining <= 10) d.classList.add("warning");
+}
+
+function setTimerPreset(sec, btn) {
+  timerTotal = sec;
+  document.querySelectorAll("#timerPresets .preset-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  document.getElementById("timerCustomMin").value = "";
+  stopTimerInterval();
+  timerRunning = false;
+  timerRemaining = timerTotal;
+  setStartLabel("Start", "ti-player-play");
+  updateTimerDisplay();
+}
+
+function setTimerCustom() {
+  const min = parseFloat(document.getElementById("timerCustomMin").value);
+  if (isNaN(min) || min <= 0) return;
+  timerTotal = Math.round(min * 60);
+  document.querySelectorAll("#timerPresets .preset-btn").forEach(b => b.classList.remove("active"));
+  stopTimerInterval();
+  timerRunning = false;
+  timerRemaining = timerTotal;
+  setStartLabel("Start", "ti-player-play");
+  updateTimerDisplay();
+}
+
+function setStartLabel(text, icon) {
+  const b = document.getElementById("timerStartBtn");
+  b.innerHTML = `<i class="ti ${icon}"></i> ${text}`;
+}
+
+function toggleTimer() {
+  // Resume audio context on user gesture (required by browsers)
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === "suspended") ctx.resume();
+
+  if (timerRunning) {
+    // pause
+    stopTimerInterval();
+    timerRunning = false;
+    setStartLabel("Resume", "ti-player-play");
+    return;
+  }
+  // start / resume
+  if (timerRemaining <= 0) timerRemaining = timerTotal;
+  timerRunning = true;
+  setStartLabel("Pause", "ti-player-pause");
+  const startStamp = Date.now();
+  let baseline = timerRemaining;
+  stopTimerInterval();
+  timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - startStamp) / 1000;
+    timerRemaining = baseline - elapsed;
+    if (timerRemaining <= 0) {
+      timerRemaining = 0;
+      updateTimerDisplay();
+      stopTimerInterval();
+      timerRunning = false;
+      setStartLabel("Start", "ti-player-play");
+      playAlarm();
+      return;
+    }
+    updateTimerDisplay();
+  }, 100);
+  updateTimerDisplay();
+}
+
+function stopTimerInterval() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function resetTimer() {
+  stopTimerInterval();
+  timerRunning = false;
+  timerRemaining = timerTotal;
+  setStartLabel("Start", "ti-player-play");
+  updateTimerDisplay();
+}
+
+// ── Sound synthesis ──────────────────────────────────────────
+function tone(ctx, freq, start, dur, type, peak) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type || "sine";
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime + start);
+  gain.gain.exponentialRampToValueAtTime(peak || 0.3, ctx.currentTime + start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + start + dur);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.05);
+}
+
+function playSound(kind) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume();
+  switch (kind) {
+    case "bell":
+      // Low resonant toll, repeated 3x
+      [0, 1.1, 2.2].forEach(t => {
+        tone(ctx, 220, t, 1.4, "sine", 0.4);
+        tone(ctx, 440, t, 1.0, "sine", 0.18);
+        tone(ctx, 660, t, 0.7, "sine", 0.08);
+      });
+      break;
+    case "alarm":
+      // Urgent two-tone buzz alternating, 6 beeps
+      for (let i = 0; i < 6; i++) {
+        tone(ctx, i % 2 ? 880 : 660, i * 0.28, 0.22, "square", 0.22);
+      }
+      break;
+    case "arpeggio":
+      // Rising major arpeggio C-E-G-C
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(ctx, f, i * 0.16, 0.4, "triangle", 0.3));
+      break;
+    case "chime":
+    default:
+      // Pleasant two-note chime, repeated
+      [0, 0.6].forEach(t => {
+        tone(ctx, 880, t, 0.5, "sine", 0.35);
+        tone(ctx, 1174.66, t + 0.18, 0.6, "sine", 0.3);
+      });
+      break;
+  }
+}
+
+function playAlarm() {
+  const sel = document.getElementById("timerSound");
+  playSound(sel ? sel.value : "chime");
+}
+
+function testAlarm() {
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === "suspended") ctx.resume();
+  playAlarm();
+}
+
+// init display
+updateTimerDisplay();
+
 </script>
+<script>
+/* ════════════════════════════════════════════════════════════
+   Progressive Web App setup — self-contained, single-file.
+   Builds the web app manifest and a caching service worker at
+   runtime as Blob URLs, so no separate files are required.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  // ── Icon (SVG data URI) reused for manifest ──
+  const ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%230d0d12'/%3E%3Cpath d='M256 64 L416 144 L416 336 L256 448 L96 336 L96 144 Z' fill='none' stroke='%23c9a84c' stroke-width='18'/%3E%3Ctext x='256' y='320' font-family='Georgia,serif' font-size='190' font-weight='bold' fill='%23e8c96a' text-anchor='middle'%3E%24%3C/text%3E%3C/svg%3E";
+
+  // ── Web App Manifest (as Blob) ──
+  const manifest = {
+    name: "MTG Draft Cost Calculator",
+    short_name: "Draft Calc",
+    description: "Price out Magic: The Gathering draft events, prizes, spoilers, archetypes, pairings, and a timer.",
+    start_url: ".",
+    scope: ".",
+    display: "standalone",
+    orientation: "any",
+    background_color: "#0d0d12",
+    theme_color: "#0d0d12",
+    icons: [
+      { src: ICON, sizes: "any", type: "image/svg+xml", purpose: "any maskable" }
+    ]
+  };
+  try {
+    const mBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    const mURL = URL.createObjectURL(mBlob);
+    const link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = mURL;
+    document.head.appendChild(link);
+  } catch (e) { /* manifest optional */ }
+
+  // ── Service Worker (as Blob) — cache-first for offline use ──
+  // Note: blob-based SW works in most modern browsers for same-document
+  // caching. When the file is served over http(s) it will register and
+  // enable offline launch. Over file:// SWs are disabled by the browser,
+  // which is expected — the app still runs fully, just without offline SW.
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    const swCode = `
+      const CACHE = "mtg-draft-calc-v1";
+      self.addEventListener("install", (e) => { self.skipWaiting(); });
+      self.addEventListener("activate", (e) => { e.waitUntil(self.clients.claim()); });
+      self.addEventListener("fetch", (e) => {
+        const req = e.request;
+        if (req.method !== "GET") return;
+        e.respondWith(
+          caches.open(CACHE).then((cache) =>
+            cache.match(req).then((hit) => {
+              const net = fetch(req).then((res) => {
+                if (res && res.status === 200 && (res.type === "basic" || res.type === "cors")) {
+                  cache.put(req, res.clone());
+                }
+                return res;
+              }).catch(() => hit);
+              return hit || net;
+            })
+          )
+        );
+      });
+    `;
+    try {
+      const swBlob = new Blob([swCode], { type: "text/javascript" });
+      const swURL = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swURL).catch(() => { /* SW optional */ });
+    } catch (e) { /* SW optional */ }
+  }
+
+  // ── Install prompt handling (Android/desktop Chrome) ──
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallButton();
+  });
+
+  function showInstallButton() {
+    if (document.getElementById("pwaInstallBtn")) return;
+    const btn = document.createElement("button");
+    btn.id = "pwaInstallBtn";
+    btn.innerHTML = '<i class="ti ti-download"></i> Install App';
+    btn.style.cssText =
+      "position:fixed;bottom:18px;right:18px;z-index:200;" +
+      "background:linear-gradient(135deg,var(--accent-dim),var(--accent));" +
+      "color:var(--ink);border:none;border-radius:24px;cursor:pointer;" +
+      "font-family:'Cinzel',serif;font-size:0.72rem;font-weight:700;" +
+      "letter-spacing:0.08em;text-transform:uppercase;padding:12px 20px;" +
+      "box-shadow:0 6px 24px rgba(0,0,0,0.5),var(--accent-glow);" +
+      "display:flex;align-items:center;gap:7px;transition:transform .15s,filter .15s;";
+    btn.onmouseenter = () => { btn.style.transform = "translateY(-2px)"; btn.style.filter = "brightness(1.1)"; };
+    btn.onmouseleave = () => { btn.style.transform = ""; btn.style.filter = ""; };
+    btn.onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      btn.remove();
+    };
+    document.body.appendChild(btn);
+  }
+
+  window.addEventListener("appinstalled", () => {
+    const b = document.getElementById("pwaInstallBtn");
+    if (b) b.remove();
+    deferredPrompt = null;
+  });
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   Modular layout — drag-to-reorder the main sections.
+   Wraps each top-level block in <main> with a draggable module
+   shell + grip handle. Order persists in localStorage.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  const main = document.querySelector("main.container");
+  if (!main) return;
+
+  // Stable IDs for each section, in source order.
+  const SECTION_IDS = [
+    "mod-set-selection",
+    "mod-metrics",
+    "mod-prizes",
+    "mod-grand-total",
+    "mod-spoiler",
+    "mod-timer",
+    "mod-tournament",
+  ];
+
+  // Collect the original direct-child blocks (excluding scripts/text).
+  const blocks = Array.from(main.children).filter(
+    (n) => n.nodeType === 1 && n.tagName !== "SCRIPT"
+  );
+
+  // Wrap each block in a .module shell with a drag handle.
+  const modules = [];
+  blocks.forEach((block, i) => {
+    const id = SECTION_IDS[i] || ("mod-" + i);
+    const mod = document.createElement("div");
+    mod.className = "module";
+    mod.id = id;
+    mod.setAttribute("draggable", "false"); // only the handle initiates drag
+
+    const handle = document.createElement("div");
+    handle.className = "module-handle";
+    handle.title = "Drag to reorder this section";
+    handle.innerHTML = '<i class="ti ti-grip-vertical"></i>';
+
+    // Dragging is initiated from the handle, applied to the module.
+    handle.addEventListener("mousedown", () => mod.setAttribute("draggable", "true"));
+    handle.addEventListener("touchstart", () => mod.setAttribute("draggable", "true"), { passive: true });
+    mod.addEventListener("dragend", () => mod.setAttribute("draggable", "false"));
+
+    main.insertBefore(mod, block);
+    mod.appendChild(handle);
+    mod.appendChild(block);
+    modules.push(mod);
+  });
+
+  // Remember the original (source) order so Reset View can restore it.
+  const sourceOrder = modules.map((m) => m.id);
+  window.__restoreModuleSourceOrder = function () {
+    sourceOrder.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("module")) main.appendChild(el);
+    });
+  };
+
+  let dragEl = null;
+
+  modules.forEach((mod) => {
+    mod.addEventListener("dragstart", (e) => {
+      dragEl = mod;
+      mod.classList.add("dragging");
+      try { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", mod.id); } catch (_) {}
+    });
+    mod.addEventListener("dragend", () => {
+      if (dragEl) dragEl.classList.remove("dragging");
+      modules.forEach((m) => m.classList.remove("drag-over"));
+      dragEl = null;
+      saveOrder();
+    });
+    mod.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!dragEl || dragEl === mod) return;
+      e.dataTransfer.dropEffect = "move";
+      mod.classList.add("drag-over");
+    });
+    mod.addEventListener("dragleave", () => mod.classList.remove("drag-over"));
+    mod.addEventListener("drop", (e) => {
+      e.preventDefault();
+      mod.classList.remove("drag-over");
+      if (!dragEl || dragEl === mod) return;
+      // Insert dragged element before or after target based on pointer position.
+      const rect = mod.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      main.insertBefore(dragEl, after ? mod.nextSibling : mod);
+      saveOrder();
+    });
+  });
+
+  function saveOrder() {
+    const order = Array.from(main.children)
+      .filter((n) => n.classList && n.classList.contains("module"))
+      .map((n) => n.id);
+    try { localStorage.setItem("mtg-section-order", JSON.stringify(order)); } catch (_) {}
+  }
+
+  function restoreOrder() {
+    let order;
+    try { order = JSON.parse(localStorage.getItem("mtg-section-order")); } catch (_) { return; }
+    if (!Array.isArray(order)) return;
+    order.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.classList.contains("module")) main.appendChild(el);
+    });
+  }
+
+  restoreOrder();
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   View Controls — font scaling, grid layout, reset.
+   Persists to localStorage. Reset restores defaults including
+   section order (clears mtg-section-order) and font/layout.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  const MIN_SCALE = 0.75, MAX_SCALE = 1.6, STEP = 0.1;
+  let fontScale = 1;
+  let layout = "column";     // "column" | "grid"
+  let threeCol = false;
+
+  const main = document.querySelector("main.container");
+
+  // ── Font scaling ──
+  window.adjustFont = function (dir) {
+    fontScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, +(fontScale + dir * STEP).toFixed(2)));
+    applyFont();
+    saveView();
+  };
+  function applyFont() {
+    document.documentElement.style.setProperty("--font-scale", fontScale);
+    const lbl = document.getElementById("fontScaleLabel");
+    if (lbl) lbl.textContent = Math.round(fontScale * 100) + "%";
+  }
+
+  // ── Layout ──
+  window.setLayout = function (mode) {
+    layout = mode;
+    applyLayout();
+    saveView();
+  };
+  window.toggleThreeCol = function () {
+    threeCol = !threeCol;
+    applyLayout();
+    saveView();
+  };
+  function applyLayout() {
+    if (!main) return;
+    const colBtn = document.getElementById("layoutColBtn");
+    const gridBtn = document.getElementById("layoutGridBtn");
+    const cols3Btn = document.getElementById("cols3Btn");
+    if (layout === "grid") {
+      main.classList.add("grid-mode");
+      main.classList.toggle("cols-3", threeCol);
+      colBtn && colBtn.classList.remove("active");
+      gridBtn && gridBtn.classList.add("active");
+      if (cols3Btn) { cols3Btn.style.display = ""; cols3Btn.classList.toggle("active", threeCol); }
+    } else {
+      main.classList.remove("grid-mode", "cols-3");
+      colBtn && colBtn.classList.add("active");
+      gridBtn && gridBtn.classList.remove("active");
+      if (cols3Btn) { cols3Btn.style.display = "none"; cols3Btn.classList.remove("active"); }
+    }
+  }
+
+  // ── Reset everything to defaults ──
+  window.resetView = function () {
+    fontScale = 1;
+    layout = "column";
+    threeCol = false;
+    applyFont();
+    applyLayout();
+    // Clear saved section order and restore source order
+    try { localStorage.removeItem("mtg-section-order"); } catch (_) {}
+    if (typeof window.__restoreModuleSourceOrder === "function") {
+      window.__restoreModuleSourceOrder();
+    }
+    saveView();
+    // brief confirmation flash on the reset button
+    const btn = document.querySelector(".view-bar .vb-wide");
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check"></i> <span class="vb-collapsible-label">Done</span>';
+      setTimeout(() => { btn.innerHTML = orig; }, 1200);
+    }
+  };
+
+  // ── Persistence ──
+  function saveView() {
+    try {
+      localStorage.setItem("mtg-view", JSON.stringify({ fontScale, layout, threeCol }));
+    } catch (_) {}
+  }
+  function restoreView() {
+    let v;
+    try { v = JSON.parse(localStorage.getItem("mtg-view")); } catch (_) {}
+    if (v && typeof v === "object") {
+      fontScale = typeof v.fontScale === "number" ? v.fontScale : 1;
+      layout = v.layout === "grid" ? "grid" : "column";
+      threeCol = !!v.threeCol;
+    }
+    applyFont();
+    applyLayout();
+  }
+
+  restoreView();
+})();
+</script>
+
 </body>
 </html>

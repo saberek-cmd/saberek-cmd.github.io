@@ -270,21 +270,99 @@
     max-width: 1400px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: dense;       /* Tetris-pack: shorter items fill gaps */
+    grid-auto-rows: minmax(0, auto);
     gap: 1.25rem;
-    align-items: start;
+    align-items: stretch;
   }
   @media (min-width: 1180px) {
     main.container.grid-mode.cols-3 { grid-template-columns: repeat(3, 1fr); }
   }
-  main.container.grid-mode .module { margin: 0; }
+  main.container.grid-mode .module {
+    margin: 0;
+    min-width: 0;                /* Prevent grid blowout */
+    display: flex;
+    flex-direction: column;
+  }
+  main.container.grid-mode .module > :not(.module-handle) {
+    flex: 1;                     /* Inner block fills the module height */
+    margin-bottom: 0 !important;
+  }
   main.container.grid-mode .panel,
-  main.container.grid-mode .grand-total-panel,
-  main.container.grid-mode .metrics-grid { margin-bottom: 0; height: 100%; }
-  /* Let a module span the full width when locked as "wide" */
+  main.container.grid-mode .grand-total-panel {
+    margin-bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  main.container.grid-mode > .module > .metrics-grid {
+    margin-bottom: 0;
+    height: 100%;
+    align-content: start;
+  }
+  /* Inside the cost-summary wrapper, metrics-grid keeps its natural gap below */
+  main.container.grid-mode .cost-summary .metrics-grid {
+    margin-bottom: 1.25rem;
+    height: auto;
+  }
+  /* Let a module span the full width when marked */
   main.container.grid-mode .module.span-full { grid-column: 1 / -1; }
   @media (max-width: 720px) {
     main.container.grid-mode { grid-template-columns: 1fr; }
   }
+
+  /* ── Container-query text scaling ─────────────────────────
+     When a module sits in a narrow grid column, scale down its
+     internal fonts proportionally so titles, labels, and values
+     remain balanced rather than oversized for the column width. */
+  .module {
+    container-type: inline-size;
+    container-name: module;
+  }
+  /* Below ~360px wide column: compact */
+  @container module (max-width: 360px) {
+    .section-label { font-size: 0.78rem; }
+    .section-label i { font-size: 17px; }
+    .subsection-label { font-size: 0.68rem; }
+    .field label, .sort-group label { font-size: 0.66rem; }
+    .metric-label { font-size: 0.6rem; }
+    .metric-value { font-size: 1.35rem; }
+    .metric-sub { font-size: 0.7rem; }
+    .grand-label { font-size: 0.74rem; }
+    .grand-value { font-size: 1.95rem; }
+    .grand-breakdown, .grand-per-player { font-size: 0.78rem; }
+    .prize-table-head { font-size: 0.58rem; }
+    .archetype-grid { grid-template-columns: 1fr; }
+    .archetype-name { font-size: 0.86rem; }
+    .card-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .card-tile .card-name { font-size: 0.72rem; }
+    .card-tile .card-price { font-size: 0.76rem; }
+    .timer-display { font-size: 2.2rem; }
+    .standings-table th { font-size: 0.62rem; padding: 5px 6px; }
+    .standings-table td { font-size: 0.88rem; padding: 6px 6px; }
+    .match-card { grid-template-columns: 1fr; gap: 6px; padding: 0.55rem 0.8rem; }
+    .match-player.left { justify-content: flex-start; text-align: left; }
+    .vs-pill { justify-self: center; font-size: 0.55rem; }
+    .panel, .grand-total-panel { padding: 1rem 1.1rem; }
+  }
+  /* Below ~480px wide column: medium-compact */
+  @container module (min-width: 360.01px) and (max-width: 480px) {
+    .section-label { font-size: 0.84rem; }
+    .metric-value { font-size: 1.55rem; }
+    .grand-value { font-size: 2.15rem; }
+    .archetype-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    .timer-display { font-size: 2.8rem; }
+    .card-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ── Cost Summary wrapper (metrics + grand total) ─────── */
+  .cost-summary { display: block; }
+  main.container.grid-mode .cost-summary {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  main.container.grid-mode .cost-summary .grand-total-panel { margin-bottom: 0; }
 
   /* ── View Control Bar ─────────────────────────────────── */
   .view-bar {
@@ -514,7 +592,7 @@
   }
 
   /* ── Metrics strip ────────────────────────────────────── */
-  .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.25rem; }
+  .metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 1.25rem; }
   @media (max-width: 620px) { .metrics-grid { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 360px) { .metrics-grid { grid-template-columns: 1fr; } }
 
@@ -1268,8 +1346,8 @@
 </div>
 
 <header class="site-header">
-  <h1 class="site-title">MTG Draft Tools</h1>
-  <p class="site-subtitle">Plan and play your next Magic: The Gathering draft event</p>
+  <h1 class="site-title">Draft Cost Calculator</h1>
+  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -1322,26 +1400,34 @@
     </div>
   </div>
 
-  <!-- ── METRICS ────────────────────────────────────────── -->
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-label">Price per Pack</div>
-      <div class="metric-value" id="m-ppp">$0.00</div>
+  <!-- ── COST SUMMARY (metrics + total event cost) ──────── -->
+  <div class="cost-summary">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Price per Pack</div>
+        <div class="metric-value" id="m-ppp">$0.00</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Packs Needed</div>
+        <div class="metric-value" id="m-packs">0</div>
+        <div class="metric-sub" id="m-boxes-note"></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Leftover Packs</div>
+        <div class="metric-value" id="m-leftover">0</div>
+        <div class="metric-sub" id="m-leftover-val"></div>
+      </div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Packs Needed</div>
-      <div class="metric-value" id="m-packs">0</div>
-      <div class="metric-sub" id="m-boxes-note"></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Draft Cost</div>
-      <div class="metric-value" id="m-draft">$0.00</div>
-      <div class="metric-sub" id="m-per-head"></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Leftover Packs</div>
-      <div class="metric-value" id="m-leftover">0</div>
-      <div class="metric-sub" id="m-leftover-val"></div>
+
+    <div class="grand-total-panel">
+      <div>
+        <div class="grand-label"><i class="ti ti-coin"></i>&nbsp; Total Event Cost</div>
+        <div class="grand-breakdown" id="gt-breakdown">draft + prizes</div>
+      </div>
+      <div>
+        <div class="grand-value" id="grand-total">$0.00</div>
+        <div class="grand-per-player" id="gt-per-player">$0.00 per player</div>
+      </div>
     </div>
   </div>
 
@@ -1355,18 +1441,6 @@
     <button class="add-tier-btn" onclick="addPrize()">
       <i class="ti ti-plus"></i> Add Prize Tier
     </button>
-  </div>
-
-  <!-- ── GRAND TOTAL ────────────────────────────────────── -->
-  <div class="grand-total-panel">
-    <div>
-      <div class="grand-label"><i class="ti ti-coin"></i>&nbsp; Total Event Cost</div>
-      <div class="grand-breakdown" id="gt-breakdown">draft + prizes</div>
-    </div>
-    <div>
-      <div class="grand-value" id="grand-total">$0.00</div>
-      <div class="grand-per-player" id="gt-per-player">$0.00 per player</div>
-    </div>
   </div>
 
   <!-- ── SPOILER ────────────────────────────────────────── -->
@@ -1605,7 +1679,7 @@ const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Boos
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
+let prizes = [{ place:"1st", packs:4 }, { place:"2nd", packs:3 }, { place:"3rd", packs:2 }, { place:"4th", packs:1 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -1672,8 +1746,6 @@ function recalc() {
   document.getElementById("m-ppp").textContent          = fmt(pPerPk);
   document.getElementById("m-packs").textContent        = dPacks;
   document.getElementById("m-boxes-note").textContent   = boxes + (boxes===1?" box":" boxes") + " needed";
-  document.getElementById("m-draft").textContent        = fmt(dCost);
-  document.getElementById("m-per-head").textContent     = fmt(dCost/np) + " / player";
   document.getElementById("m-leftover").textContent     = left;
   document.getElementById("m-leftover-val").textContent = fmt(left*pPerPk) + " value";
   document.getElementById("grand-total").textContent    = fmt(total);
@@ -2471,9 +2543,8 @@ updateTimerDisplay();
   // Stable IDs for each section, in source order.
   const SECTION_IDS = [
     "mod-set-selection",
-    "mod-metrics",
+    "mod-cost-summary",
     "mod-prizes",
-    "mod-grand-total",
     "mod-spoiler",
     "mod-timer",
     "mod-tournament",
