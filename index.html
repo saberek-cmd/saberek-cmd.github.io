@@ -355,6 +355,32 @@
     .card-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
+  /* ── Draft Mode — focus on Spoiler / Timer / Tournament ── */
+  body.draft-mode #mod-set-selection,
+  body.draft-mode #mod-cost-summary,
+  body.draft-mode #mod-prizes { display: none !important; }
+  body.draft-mode .site-header { padding: 1.25rem 1.5rem 1rem; }
+  body.draft-mode .site-title { font-size: clamp(1.3rem, 3vw, 2rem); }
+  body.draft-mode .site-subtitle { display: none; }
+  body.draft-mode .header-rule { margin-top: 0.6rem; }
+  body.draft-mode .site-header::after {
+    content: 'Draft Mode';
+    position: absolute; top: 12px; left: 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb),0.14);
+    border: 1px solid var(--accent-dim);
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 10;
+  }
+  #draftModeBtn.active {
+    background: rgba(var(--accent-rgb),0.16);
+    color: var(--accent-light);
+  }
+
   /* ── Cost Summary wrapper (metrics + grand total) ─────── */
   .cost-summary { display: block; }
   main.container.grid-mode .cost-summary {
@@ -887,6 +913,80 @@
 
   /* ── Footer ───────────────────────────────────────────── */
   /* ── Tournament / Pairings ────────────────────────────── */
+  .tourney-header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .format-picker { display: flex; align-items: center; gap: 8px; }
+  .format-picker label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+  .format-picker select {
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    padding: 6px 30px 6px 12px;
+    cursor: pointer;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    -webkit-appearance: none; appearance: none;
+    transition: border-color 0.2s;
+  }
+  .format-picker select:hover { border-color: var(--accent-dim); }
+  .format-picker select:focus { border-color: var(--accent-dim); box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.12); }
+
+  .bracket-tag {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--surface-hi);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    margin-left: 6px;
+  }
+  .bracket-tag.winners { color: var(--emerald); border-color: rgba(42,144,96,0.4); }
+  .bracket-tag.losers { color: var(--ruby); border-color: rgba(176,48,80,0.4); }
+  .bracket-tag.final { color: var(--accent); border-color: var(--accent-dim); }
+
+  .champion-banner {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb),0.12), rgba(var(--accent-rgb),0.04));
+    border: 1px solid var(--accent-dim);
+    border-radius: var(--radius-xl);
+    margin-top: 1rem;
+    box-shadow: var(--accent-glow);
+  }
+  .champion-banner .crown-icon { font-size: 2.2rem; color: var(--accent); margin-bottom: 6px; display: block; }
+  .champion-banner .champ-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-dim);
+  }
+  .champion-banner .champ-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent-light);
+    margin-top: 4px;
+    text-shadow: 0 0 20px rgba(var(--accent-rgb),0.3);
+  }
+
   .tourney-add-row { display: flex; gap: 8px; margin-bottom: 1rem; }
   .tourney-add-row input {
     flex: 1;
@@ -1340,6 +1440,10 @@
     <button id="cols3Btn" onclick="toggleThreeCol()" title="Toggle 3 columns" aria-label="Toggle three columns" style="display:none"><i class="ti ti-columns-3"></i></button>
   </div>
   <div class="vb-divider"></div>
+  <button id="draftModeBtn" class="vb-wide" onclick="toggleDraftMode()" title="Show only draft-time sections (Spoiler, Timer, Tournament)">
+    <i class="ti ti-cards"></i> <span class="vb-collapsible-label">Draft Mode</span>
+  </button>
+  <div class="vb-divider"></div>
   <button class="vb-wide" onclick="resetView()" title="Reset view to default">
     <i class="ti ti-rotate-2"></i> <span class="vb-collapsible-label">Reset View</span>
   </button>
@@ -1501,7 +1605,19 @@
 
   <!-- ── TOURNAMENT / PAIRINGS ──────────────────────────── -->
   <div class="panel">
-    <p class="section-label"><i class="ti ti-swords"></i> Draft Tournament — Swiss Pairings</p>
+    <div class="tourney-header-row">
+      <p class="section-label" style="margin:0;flex:1"><i class="ti ti-swords"></i> Draft Tournament — <span id="formatLabel">Swiss</span></p>
+      <div class="format-picker">
+        <label for="formatSelect">Format</label>
+        <select id="formatSelect" onchange="changeFormat()">
+          <option value="swiss">Swiss</option>
+          <option value="single">Single Elimination</option>
+          <option value="double">Double Elimination</option>
+          <option value="round_robin">Round Robin</option>
+          <option value="free_play">Free Play</option>
+        </select>
+      </div>
+    </div>
 
     <div class="tourney-add-row">
       <input type="text" id="playerNameInput" placeholder="Enter drafter name…" maxlength="40"
@@ -1679,7 +1795,7 @@ const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Boos
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
+let prizes = [{ place:"1st", packs:3 }, { place:"2nd", packs:2 }, { place:"3rd", packs:1 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -2183,24 +2299,41 @@ buildThemeMenu();
 
 
 // ════════════════════════════════════════════════════════════
-//  DRAFT TOURNAMENT — Swiss-style pairing engine
+//  DRAFT TOURNAMENT — multi-format pairing engine
+//  Supports: swiss | single | double | round_robin | free_play
 // ════════════════════════════════════════════════════════════
 const BYE = "__BYE__";
+const FORMAT_LABELS = {
+  swiss: "Swiss",
+  single: "Single Elimination",
+  double: "Double Elimination",
+  round_robin: "Round Robin",
+  free_play: "Free Play"
+};
 let tourney = {
-  players: [],     // [{id, name, wins, losses, byes, oppIds:Set-as-array}]
-  rounds: [],      // [{number, matches:[{a,b,winner}]}]
+  players: [],       // {id, name, wins, losses, byes, oppIds:[]}
+  rounds: [],        // {number, matches:[{a,b,winner,bracket?}]}
   started: false,
+  format: "swiss",
+  finished: false,
 };
 let nextPlayerId = 1;
 
 function tEsc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function changeFormat() {
+  if (tourney.started) return;
+  const sel = document.getElementById("formatSelect");
+  tourney.format = sel.value;
+  document.getElementById("formatLabel").textContent = FORMAT_LABELS[tourney.format];
+  renderPlayers();
+}
 
 function addPlayer() {
   const inp = document.getElementById("playerNameInput");
   const name = inp.value.trim();
   if (!name) return;
   if (tourney.started) return;
-  // prevent duplicate names (case-insensitive)
   if (tourney.players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
     inp.value = "";
     inp.placeholder = "That name is already added";
@@ -2208,8 +2341,7 @@ function addPlayer() {
     return;
   }
   tourney.players.push({ id: nextPlayerId++, name, wins:0, losses:0, byes:0, oppIds:[] });
-  inp.value = "";
-  inp.focus();
+  inp.value = ""; inp.focus();
   renderPlayers();
 }
 
@@ -2226,19 +2358,28 @@ function renderPlayers() {
     `<span class="player-tag">${tEsc(p.name)}<button class="pt-remove" onclick="removePlayer(${p.id})" aria-label="Remove ${tEsc(p.name)}"><i class="ti ti-x"></i></button></span>`
   ).join("");
   const n = tourney.players.length;
-  count.textContent = n === 0 ? "No drafters added yet."
-    : `${n} drafter${n===1?"":"s"} added${n%2===1?" — odd count, one bye will be assigned each round.":"."}`;
+  const fmt = tourney.format;
+  let note;
+  if (n === 0) note = "No drafters added yet.";
+  else if (fmt === "round_robin") note = `${n} drafter${n===1?"":"s"} — round robin runs ${n%2?n:n-1} round${n%2?n===1?"":"s":"s"}.`;
+  else if (fmt === "single") note = `${n} drafter${n===1?"":"s"} — single elimination bracket${n%2===1?" (odd count means one first-round bye).":"."}`;
+  else if (fmt === "double") note = `${n} drafter${n===1?"":"s"} — double elimination: winners + losers bracket.`;
+  else if (fmt === "free_play") note = `${n} drafter${n===1?"":"s"} — free play: pair anyone with anyone each round.`;
+  else note = `${n} drafter${n===1?"":"s"} added${n%2===1?" — odd count, one bye will be assigned each round.":"."}`;
+  count.textContent = note;
   document.getElementById("startBtn").disabled = n < 2 || tourney.started;
 }
 
 function getPlayer(id){ return tourney.players.find(p => p.id === id); }
-function points(p){ return p.wins; } // 1 point per win (byes count as a win)
+function points(p){ return p.wins; }
 
 function startTournament() {
   if (tourney.players.length < 2) return;
   tourney.started = true;
+  tourney.finished = false;
   document.getElementById("playerNameInput").disabled = true;
   document.querySelector(".tourney-add-row .btn-accent").disabled = true;
+  document.getElementById("formatSelect").disabled = true;
   document.getElementById("startBtn").style.display = "none";
   document.getElementById("nextRoundBtn").style.display = "inline-flex";
   document.getElementById("resetBtn").style.display = "inline-flex";
@@ -2248,7 +2389,6 @@ function startTournament() {
   renderStandings();
 }
 
-// Fisher-Yates shuffle
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -2258,16 +2398,24 @@ function shuffle(arr) {
   return a;
 }
 
-// Generate pairings. Round 1 = random. Later rounds = Swiss (group by record,
-// pair within groups, avoid rematches where possible, float odd players down).
+// Dispatch to the right pairing generator based on the format.
 function generateRound(number) {
+  switch (tourney.format) {
+    case "single":       return genSingleElim(number);
+    case "double":       return genDoubleElim(number);
+    case "round_robin":  return genRoundRobin(number);
+    case "free_play":    return genFreePlay(number);
+    case "swiss":
+    default:             return genSwiss(number);
+  }
+}
+
+// ── SWISS ───────────────────────────────────────────────────
+function genSwiss(number) {
   const players = tourney.players.slice();
   let ordered;
-
-  if (number === 1) {
-    ordered = shuffle(players);
-  } else {
-    // Sort by points desc, then random within equal points for balance
+  if (number === 1) ordered = shuffle(players);
+  else {
     const byPts = {};
     players.forEach(p => { (byPts[points(p)] = byPts[points(p)] || []).push(p); });
     ordered = [];
@@ -2275,47 +2423,175 @@ function generateRound(number) {
       shuffle(byPts[pt]).forEach(p => ordered.push(p));
     });
   }
-
   const matches = [];
   const pool = ordered.slice();
-
-  // Assign a bye first if odd: give it to the lowest-ranked player who hasn't had one
   if (pool.length % 2 === 1) {
     let byeIdx = -1;
     for (let i = pool.length - 1; i >= 0; i--) {
       if (pool[i].byes === 0) { byeIdx = i; break; }
     }
-    if (byeIdx === -1) byeIdx = pool.length - 1; // everyone has had a bye; give to last
+    if (byeIdx === -1) byeIdx = pool.length - 1;
     const byePlayer = pool.splice(byeIdx, 1)[0];
     matches.push({ a: byePlayer.id, b: BYE, winner: byePlayer.id });
   }
-
-  // Pair remaining: walk down the ordered pool, match each with the nearest
-  // opponent they haven't already played; fall back to next available.
   const used = new Set();
   for (let i = 0; i < pool.length; i++) {
     if (used.has(pool[i].id)) continue;
     const p = pool[i];
     used.add(p.id);
     let opp = null;
-    // first try: nearest not-yet-used, not-already-played
     for (let j = i + 1; j < pool.length; j++) {
       if (used.has(pool[j].id)) continue;
       if (!p.oppIds.includes(pool[j].id)) { opp = pool[j]; break; }
     }
-    // fallback: nearest not-yet-used (allow rematch)
     if (!opp) {
       for (let j = i + 1; j < pool.length; j++) {
         if (!used.has(pool[j].id)) { opp = pool[j]; break; }
       }
     }
-    if (opp) {
-      used.add(opp.id);
-      matches.push({ a: p.id, b: opp.id, winner: null });
+    if (opp) { used.add(opp.id); matches.push({ a: p.id, b: opp.id, winner: null }); }
+  }
+  tourney.rounds.push({ number, matches });
+}
+
+// ── SINGLE ELIMINATION ─────────────────────────────────────
+function genSingleElim(number) {
+  let alive;
+  if (number === 1) alive = shuffle(tourney.players.slice());
+  else {
+    // Only players with zero losses survive
+    alive = tourney.players.filter(p => p.losses === 0);
+  }
+  if (alive.length < 2) { tourney.finished = true; return; }
+  const matches = [];
+  const pool = alive.slice();
+  if (pool.length % 2 === 1) {
+    // Give a bye to a random player (first round, or to the one whose seed advances)
+    let byeIdx = 0;
+    for (let i = 0; i < pool.length; i++) {
+      if (pool[i].byes === 0) { byeIdx = i; break; }
     }
+    const bp = pool.splice(byeIdx, 1)[0];
+    matches.push({ a: bp.id, b: BYE, winner: bp.id, bracket: bracketLabel(pool.length + 1, "single") });
+  }
+  const bracketName = bracketLabel(pool.length, "single");
+  for (let i = 0; i < pool.length; i += 2) {
+    matches.push({ a: pool[i].id, b: pool[i+1].id, winner: null, bracket: bracketName });
+  }
+  tourney.rounds.push({ number, matches });
+}
+
+// ── DOUBLE ELIMINATION ─────────────────────────────────────
+// Winners bracket and losers bracket run concurrently.
+function genDoubleElim(number) {
+  if (number === 1) {
+    const pool = shuffle(tourney.players.slice());
+    const matches = [];
+    if (pool.length % 2 === 1) {
+      const bp = pool.pop();
+      matches.push({ a: bp.id, b: BYE, winner: bp.id, bracket: "Winners" });
+    }
+    for (let i = 0; i < pool.length; i += 2) {
+      matches.push({ a: pool[i].id, b: pool[i+1].id, winner: null, bracket: "Winners" });
+    }
+    tourney.rounds.push({ number, matches });
+    return;
   }
 
+  // For rounds 2+: winners bracket (0-loss) and losers bracket (1-loss)
+  const winners = tourney.players.filter(p => p.losses === 0);
+  const losers  = tourney.players.filter(p => p.losses === 1);
+
+  const matches = [];
+
+  // Grand final: only 1 winners player and 1 losers player left
+  if (winners.length === 1 && losers.length === 1) {
+    matches.push({ a: winners[0].id, b: losers[0].id, winner: null, bracket: "Grand Final" });
+    tourney.rounds.push({ number, matches });
+    return;
+  }
+  // Tournament done: 1 player left overall
+  if (winners.length + losers.length < 2) { tourney.finished = true; return; }
+
+  // Pair up winners bracket
+  const wpool = shuffle(winners.slice());
+  if (wpool.length % 2 === 1) {
+    const bp = wpool.pop();
+    matches.push({ a: bp.id, b: BYE, winner: bp.id, bracket: "Winners" });
+  }
+  for (let i = 0; i < wpool.length; i += 2) {
+    matches.push({ a: wpool[i].id, b: wpool[i+1].id, winner: null, bracket: "Winners" });
+  }
+  // Pair up losers bracket
+  const lpool = shuffle(losers.slice());
+  if (lpool.length % 2 === 1) {
+    const bp = lpool.pop();
+    matches.push({ a: bp.id, b: BYE, winner: bp.id, bracket: "Losers" });
+  }
+  for (let i = 0; i < lpool.length; i += 2) {
+    matches.push({ a: lpool[i].id, b: lpool[i+1].id, winner: null, bracket: "Losers" });
+  }
   tourney.rounds.push({ number, matches });
+}
+
+// ── ROUND ROBIN ─────────────────────────────────────────────
+// Every player faces every other player exactly once, using the
+// classic circle method for pairings.
+function genRoundRobin(number) {
+  const n = tourney.players.length;
+  const totalRounds = n % 2 === 0 ? n - 1 : n;
+  if (number > totalRounds) { tourney.finished = true; return; }
+
+  // Seed a fixed order at start-of-tournament by shuffling once (round 1).
+  // We rebuild pairings deterministically using rotation.
+  if (!tourney._rrSeed) tourney._rrSeed = shuffle(tourney.players.map(p => p.id));
+  const seedIds = tourney._rrSeed.slice();
+  if (seedIds.length % 2 === 1) seedIds.push(BYE); // dummy for odd counts
+
+  // Rotate: keep first fixed, rotate the rest by (number-1)
+  const arr = seedIds.slice();
+  const fixed = arr.shift();
+  for (let i = 0; i < (number - 1); i++) arr.unshift(arr.pop());
+  arr.unshift(fixed);
+
+  const matches = [];
+  const half = arr.length / 2;
+  for (let i = 0; i < half; i++) {
+    const a = arr[i], b = arr[arr.length - 1 - i];
+    if (a === BYE || b === BYE) {
+      const real = a === BYE ? b : a;
+      matches.push({ a: real, b: BYE, winner: real });
+    } else {
+      matches.push({ a, b, winner: null });
+    }
+  }
+  tourney.rounds.push({ number, matches });
+}
+
+// ── FREE PLAY ───────────────────────────────────────────────
+// Random pairings each round, no bracket, unlimited rounds.
+function genFreePlay(number) {
+  const pool = shuffle(tourney.players.slice());
+  const matches = [];
+  if (pool.length % 2 === 1) {
+    const bp = pool.pop();
+    matches.push({ a: bp.id, b: BYE, winner: bp.id });
+  }
+  for (let i = 0; i < pool.length; i += 2) {
+    matches.push({ a: pool[i].id, b: pool[i+1].id, winner: null });
+  }
+  tourney.rounds.push({ number, matches });
+}
+
+// Helper: format-appropriate bracket label
+function bracketLabel(n, format) {
+  if (format !== "single" && format !== "double") return "";
+  if (n <= 2) return "Final";
+  if (n <= 4) return "Semifinals";
+  if (n <= 8) return "Quarterfinals";
+  if (n <= 16) return "Round of 16";
+  if (n <= 32) return "Round of 32";
+  return "Round of " + n;
 }
 
 function currentRound(){ return tourney.rounds[tourney.rounds.length - 1]; }
@@ -2325,16 +2601,15 @@ function setWinner(roundNumber, matchIdx, winnerId) {
   const round = tourney.rounds.find(r => r.number === roundNumber);
   if (!round) return;
   const m = round.matches[matchIdx];
-  if (m.b === BYE) return; // byes are fixed
-  // Only allow editing the most recent round to keep records consistent
+  if (m.b === BYE) return;
   if (round.number !== currentRound().number) return;
-  m.winner = (m.winner === winnerId) ? null : winnerId; // toggle
+  m.winner = (m.winner === winnerId) ? null : winnerId;
   recomputeRecords();
   renderRounds();
   renderStandings();
+  checkTournamentEnd();
 }
 
-// Recompute all W/L/bye/opponent data from scratch across all rounds
 function recomputeRecords() {
   tourney.players.forEach(p => { p.wins=0; p.losses=0; p.byes=0; p.oppIds=[]; });
   tourney.rounds.forEach(round => {
@@ -2346,13 +2621,35 @@ function recomputeRecords() {
       }
       const a = getPlayer(m.a), b = getPlayer(m.b);
       if (a && b) {
-        a.oppIds.push(b.id);
-        b.oppIds.push(a.id);
+        a.oppIds.push(b.id); b.oppIds.push(a.id);
         if (m.winner === a.id) { a.wins++; b.losses++; }
         else if (m.winner === b.id) { b.wins++; a.losses++; }
       }
     });
   });
+}
+
+function checkTournamentEnd() {
+  const cur = currentRound();
+  if (!cur || !roundComplete(cur)) return;
+  const fmt = tourney.format;
+  if (fmt === "single") {
+    const alive = tourney.players.filter(p => p.losses === 0);
+    if (alive.length <= 1) tourney.finished = true;
+  } else if (fmt === "double") {
+    const winners = tourney.players.filter(p => p.losses === 0);
+    const losers = tourney.players.filter(p => p.losses === 1);
+    if (winners.length + losers.length <= 1) tourney.finished = true;
+  } else if (fmt === "round_robin") {
+    const n = tourney.players.length;
+    const totalRounds = n % 2 === 0 ? n - 1 : n;
+    if (tourney.rounds.length >= totalRounds) tourney.finished = true;
+  }
+  if (tourney.finished) {
+    document.getElementById("nextRoundBtn").style.display = "none";
+    renderStandings();
+    renderRounds();
+  }
 }
 
 function nextRound() {
@@ -2368,12 +2665,17 @@ function nextRound() {
   generateRound(cur.number + 1);
   renderRounds();
   renderStandings();
+  checkTournamentEnd();
 }
 
 function resetTournament() {
-  tourney = { players: tourney.players.map(p => ({...p, wins:0, losses:0, byes:0, oppIds:[]})), rounds: [], started: false };
+  tourney = {
+    players: tourney.players.map(p => ({...p, wins:0, losses:0, byes:0, oppIds:[]})),
+    rounds: [], started: false, format: tourney.format, finished: false
+  };
   document.getElementById("playerNameInput").disabled = false;
   document.querySelector(".tourney-add-row .btn-accent").disabled = false;
+  document.getElementById("formatSelect").disabled = false;
   document.getElementById("startBtn").style.display = "inline-flex";
   document.getElementById("nextRoundBtn").style.display = "none";
   document.getElementById("resetBtn").style.display = "none";
@@ -2397,14 +2699,17 @@ function renderRounds() {
         <span class="round-status">${done ? '<i class="ti ti-circle-check"></i> Complete' : 'In progress — tap a winner'}</span>
       </div>`;
     round.matches.forEach((m, idx) => {
+      const bracketTag = m.bracket
+        ? `<span class="bracket-tag ${m.bracket==='Winners'?'winners':m.bracket==='Losers'?'losers':m.bracket==='Grand Final'||m.bracket==='Final'?'final':''}">${tEsc(m.bracket)}</span>`
+        : "";
       if (m.b === BYE) {
         const a = getPlayer(m.a);
-        h += `<div class="match-card decided"><div class="match-bye"><strong>${tEsc(a.name)}</strong> receives a bye <i class="ti ti-coffee"></i></div></div>`;
+        h += `<div class="match-card decided"><div class="match-bye"><strong>${tEsc(a.name)}</strong> receives a bye ${bracketTag} <i class="ti ti-coffee"></i></div></div>`;
         return;
       }
       const a = getPlayer(m.a), b = getPlayer(m.b);
       const aWin = m.winner === a.id, bWin = m.winner === b.id;
-      const clickable = isCurrent;
+      const clickable = isCurrent && !tourney.finished;
       const aClick = clickable ? `onclick="setWinner(${round.number},${idx},${a.id})"` : "";
       const bClick = clickable ? `onclick="setWinner(${round.number},${idx},${b.id})"` : "";
       h += `<div class="match-card ${m.winner!==null?'decided':''}">
@@ -2412,7 +2717,7 @@ function renderRounds() {
           <span>${tEsc(a.name)} <span class="wl-record">(${recordStr(a)})</span></span>
           ${aWin?'<i class="ti ti-crown"></i>':''}
         </div>
-        <span class="vs-pill">VS</span>
+        <span class="vs-pill">${bracketTag || 'VS'}</span>
         <div class="match-player right ${bWin?'winner':''}" ${bClick}>
           ${bWin?'<i class="ti ti-crown"></i>':''}
           <span>${tEsc(b.name)} <span class="wl-record">(${recordStr(b)})</span></span>
@@ -2421,14 +2726,34 @@ function renderRounds() {
     });
     h += `</div>`;
   });
+
+  // Champion banner if finished
+  if (tourney.finished) {
+    const champ = tourney.players.slice().sort((a,b) =>
+      a.losses - b.losses || b.wins - a.wins || a.name.localeCompare(b.name)
+    )[0];
+    if (champ) {
+      h += `<div class="champion-banner">
+        <i class="ti ti-crown crown-icon"></i>
+        <div class="champ-label">Tournament Champion</div>
+        <div class="champ-name">${tEsc(champ.name)}</div>
+        <div class="grand-per-player" style="margin-top:4px">${champ.wins}–${champ.losses}</div>
+      </div>`;
+    }
+  }
+
   c.innerHTML = h;
 }
 
 function renderStandings() {
   const body = document.getElementById("standingsBody");
-  const sorted = tourney.players.slice().sort((a,b) =>
-    b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name)
-  );
+  const sorted = tourney.players.slice().sort((a,b) => {
+    // In elimination, sort by fewest losses first, then most wins
+    if (tourney.format === "single" || tourney.format === "double") {
+      return a.losses - b.losses || b.wins - a.wins || a.name.localeCompare(b.name);
+    }
+    return b.wins - a.wins || a.losses - b.losses || a.name.localeCompare(b.name);
+  });
   body.innerHTML = sorted.map((p, i) =>
     `<tr>
       <td class="num rank ${i===0?'rank-1':''}">${i+1}</td>
@@ -2850,6 +3175,7 @@ updateTimerDisplay();
   let fontScale = 1;
   let layout = "column";     // "column" | "grid"
   let threeCol = false;
+  let draftMode = false;
 
   const main = document.querySelector("main.container");
 
@@ -2895,13 +3221,31 @@ updateTimerDisplay();
     }
   }
 
+  // ── Draft Mode ──
+  window.toggleDraftMode = function () {
+    draftMode = !draftMode;
+    applyDraftMode();
+    saveView();
+    if (draftMode) window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  function applyDraftMode() {
+    document.body.classList.toggle("draft-mode", draftMode);
+    const btn = document.getElementById("draftModeBtn");
+    if (btn) {
+      btn.classList.toggle("active", draftMode);
+      btn.querySelector(".vb-collapsible-label").textContent = draftMode ? "Exit Draft Mode" : "Draft Mode";
+    }
+  }
+
   // ── Reset everything to defaults ──
   window.resetView = function () {
     fontScale = 1;
     layout = "column";
     threeCol = false;
+    draftMode = false;
     applyFont();
     applyLayout();
+    applyDraftMode();
     // Clear saved section order and restore source order
     try { localStorage.removeItem("mtg-section-order"); } catch (_) {}
     if (typeof window.__restoreModuleSourceOrder === "function") {
@@ -2909,7 +3253,8 @@ updateTimerDisplay();
     }
     saveView();
     // brief confirmation flash on the reset button
-    const btn = document.querySelector(".view-bar .vb-wide");
+    const btn = Array.from(document.querySelectorAll(".view-bar .vb-wide"))
+      .find(b => /Reset View|Done/.test(b.textContent));
     if (btn) {
       const orig = btn.innerHTML;
       btn.innerHTML = '<i class="ti ti-check"></i> <span class="vb-collapsible-label">Done</span>';
@@ -2920,7 +3265,7 @@ updateTimerDisplay();
   // ── Persistence ──
   function saveView() {
     try {
-      localStorage.setItem("mtg-view", JSON.stringify({ fontScale, layout, threeCol }));
+      localStorage.setItem("mtg-view", JSON.stringify({ fontScale, layout, threeCol, draftMode }));
     } catch (_) {}
   }
   function restoreView() {
@@ -2930,9 +3275,11 @@ updateTimerDisplay();
       fontScale = typeof v.fontScale === "number" ? v.fontScale : 1;
       layout = v.layout === "grid" ? "grid" : "column";
       threeCol = !!v.threeCol;
+      draftMode = !!v.draftMode;
     }
     applyFont();
     applyLayout();
+    applyDraftMode();
   }
 
   restoreView();

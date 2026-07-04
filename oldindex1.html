@@ -270,21 +270,99 @@
     max-width: 1400px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: dense;       /* Tetris-pack: shorter items fill gaps */
+    grid-auto-rows: minmax(0, auto);
     gap: 1.25rem;
-    align-items: start;
+    align-items: stretch;
   }
   @media (min-width: 1180px) {
     main.container.grid-mode.cols-3 { grid-template-columns: repeat(3, 1fr); }
   }
-  main.container.grid-mode .module { margin: 0; }
+  main.container.grid-mode .module {
+    margin: 0;
+    min-width: 0;                /* Prevent grid blowout */
+    display: flex;
+    flex-direction: column;
+  }
+  main.container.grid-mode .module > :not(.module-handle) {
+    flex: 1;                     /* Inner block fills the module height */
+    margin-bottom: 0 !important;
+  }
   main.container.grid-mode .panel,
-  main.container.grid-mode .grand-total-panel,
-  main.container.grid-mode .metrics-grid { margin-bottom: 0; height: 100%; }
-  /* Let a module span the full width when locked as "wide" */
+  main.container.grid-mode .grand-total-panel {
+    margin-bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  main.container.grid-mode > .module > .metrics-grid {
+    margin-bottom: 0;
+    height: 100%;
+    align-content: start;
+  }
+  /* Inside the cost-summary wrapper, metrics-grid keeps its natural gap below */
+  main.container.grid-mode .cost-summary .metrics-grid {
+    margin-bottom: 1.25rem;
+    height: auto;
+  }
+  /* Let a module span the full width when marked */
   main.container.grid-mode .module.span-full { grid-column: 1 / -1; }
   @media (max-width: 720px) {
     main.container.grid-mode { grid-template-columns: 1fr; }
   }
+
+  /* ── Container-query text scaling ─────────────────────────
+     When a module sits in a narrow grid column, scale down its
+     internal fonts proportionally so titles, labels, and values
+     remain balanced rather than oversized for the column width. */
+  .module {
+    container-type: inline-size;
+    container-name: module;
+  }
+  /* Below ~360px wide column: compact */
+  @container module (max-width: 360px) {
+    .section-label { font-size: 0.78rem; }
+    .section-label i { font-size: 17px; }
+    .subsection-label { font-size: 0.68rem; }
+    .field label, .sort-group label { font-size: 0.66rem; }
+    .metric-label { font-size: 0.6rem; }
+    .metric-value { font-size: 1.35rem; }
+    .metric-sub { font-size: 0.7rem; }
+    .grand-label { font-size: 0.74rem; }
+    .grand-value { font-size: 1.95rem; }
+    .grand-breakdown, .grand-per-player { font-size: 0.78rem; }
+    .prize-table-head { font-size: 0.58rem; }
+    .archetype-grid { grid-template-columns: 1fr; }
+    .archetype-name { font-size: 0.86rem; }
+    .card-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .card-tile .card-name { font-size: 0.72rem; }
+    .card-tile .card-price { font-size: 0.76rem; }
+    .timer-display { font-size: 2.2rem; }
+    .standings-table th { font-size: 0.62rem; padding: 5px 6px; }
+    .standings-table td { font-size: 0.88rem; padding: 6px 6px; }
+    .match-card { grid-template-columns: 1fr; gap: 6px; padding: 0.55rem 0.8rem; }
+    .match-player.left { justify-content: flex-start; text-align: left; }
+    .vs-pill { justify-self: center; font-size: 0.55rem; }
+    .panel, .grand-total-panel { padding: 1rem 1.1rem; }
+  }
+  /* Below ~480px wide column: medium-compact */
+  @container module (min-width: 360.01px) and (max-width: 480px) {
+    .section-label { font-size: 0.84rem; }
+    .metric-value { font-size: 1.55rem; }
+    .grand-value { font-size: 2.15rem; }
+    .archetype-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+    .timer-display { font-size: 2.8rem; }
+    .card-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ── Cost Summary wrapper (metrics + grand total) ─────── */
+  .cost-summary { display: block; }
+  main.container.grid-mode .cost-summary {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  main.container.grid-mode .cost-summary .grand-total-panel { margin-bottom: 0; }
 
   /* ── View Control Bar ─────────────────────────────────── */
   .view-bar {
@@ -514,7 +592,7 @@
   }
 
   /* ── Metrics strip ────────────────────────────────────── */
-  .metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.25rem; }
+  .metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 1.25rem; }
   @media (max-width: 620px) { .metrics-grid { grid-template-columns: repeat(2,1fr); } }
   @media (max-width: 360px) { .metrics-grid { grid-template-columns: 1fr; } }
 
@@ -1268,8 +1346,8 @@
 </div>
 
 <header class="site-header">
-  <h1 class="site-title">MTG Draft Tools</h1>
-  <p class="site-subtitle">Plan and play your next Magic: The Gathering draft event</p>
+  <h1 class="site-title">Draft Cost Calculator</h1>
+  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -1322,26 +1400,34 @@
     </div>
   </div>
 
-  <!-- ── METRICS ────────────────────────────────────────── -->
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-label">Price per Pack</div>
-      <div class="metric-value" id="m-ppp">$0.00</div>
+  <!-- ── COST SUMMARY (metrics + total event cost) ──────── -->
+  <div class="cost-summary">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Price per Pack</div>
+        <div class="metric-value" id="m-ppp">$0.00</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Packs Needed</div>
+        <div class="metric-value" id="m-packs">0</div>
+        <div class="metric-sub" id="m-boxes-note"></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Leftover Packs</div>
+        <div class="metric-value" id="m-leftover">0</div>
+        <div class="metric-sub" id="m-leftover-val"></div>
+      </div>
     </div>
-    <div class="metric-card">
-      <div class="metric-label">Packs Needed</div>
-      <div class="metric-value" id="m-packs">0</div>
-      <div class="metric-sub" id="m-boxes-note"></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Draft Cost</div>
-      <div class="metric-value" id="m-draft">$0.00</div>
-      <div class="metric-sub" id="m-per-head"></div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Leftover Packs</div>
-      <div class="metric-value" id="m-leftover">0</div>
-      <div class="metric-sub" id="m-leftover-val"></div>
+
+    <div class="grand-total-panel">
+      <div>
+        <div class="grand-label"><i class="ti ti-coin"></i>&nbsp; Total Event Cost</div>
+        <div class="grand-breakdown" id="gt-breakdown">draft + prizes</div>
+      </div>
+      <div>
+        <div class="grand-value" id="grand-total">$0.00</div>
+        <div class="grand-per-player" id="gt-per-player">$0.00 per player</div>
+      </div>
     </div>
   </div>
 
@@ -1355,18 +1441,6 @@
     <button class="add-tier-btn" onclick="addPrize()">
       <i class="ti ti-plus"></i> Add Prize Tier
     </button>
-  </div>
-
-  <!-- ── GRAND TOTAL ────────────────────────────────────── -->
-  <div class="grand-total-panel">
-    <div>
-      <div class="grand-label"><i class="ti ti-coin"></i>&nbsp; Total Event Cost</div>
-      <div class="grand-breakdown" id="gt-breakdown">draft + prizes</div>
-    </div>
-    <div>
-      <div class="grand-value" id="grand-total">$0.00</div>
-      <div class="grand-per-player" id="gt-per-player">$0.00 per player</div>
-    </div>
   </div>
 
   <!-- ── SPOILER ────────────────────────────────────────── -->
@@ -1672,8 +1746,6 @@ function recalc() {
   document.getElementById("m-ppp").textContent          = fmt(pPerPk);
   document.getElementById("m-packs").textContent        = dPacks;
   document.getElementById("m-boxes-note").textContent   = boxes + (boxes===1?" box":" boxes") + " needed";
-  document.getElementById("m-draft").textContent        = fmt(dCost);
-  document.getElementById("m-per-head").textContent     = fmt(dCost/np) + " / player";
   document.getElementById("m-leftover").textContent     = left;
   document.getElementById("m-leftover-val").textContent = fmt(left*pPerPk) + " value";
   document.getElementById("grand-total").textContent    = fmt(total);
@@ -1859,6 +1931,202 @@ function goPage(p) {
 buildCatSelect();
 renderPrizeRows();
 recalc();
+
+// ════════════════════════════════════════════════════════════
+//  LIVE SET DATA — Scryfall /sets endpoint
+//  Refreshes the SETS object on load with the latest releases.
+//  Caches results in localStorage for 24h; falls back to the
+//  hardcoded SETS if the fetch fails (offline / blocked).
+// ════════════════════════════════════════════════════════════
+const SETS_CACHE_KEY = "mtg-sets-cache-v2";
+const SETS_TTL_MS = 24 * 60 * 60 * 1000;   // 24 hours
+
+// Categorize a Scryfall set into our booster type + packs/box.
+// Returns null to skip (digital-only, non-draftable, etc.).
+function classifyScryfallSet(s) {
+  if (s.digital) return null;
+  // Excluded set types: ones that aren't typically drafted
+  const excluded = ["token","memorabilia","alchemy","minigame","planechase","vanguard","archenemy","arsenal","spellbook"];
+  if (excluded.includes(s.set_type)) return null;
+  // Skip very small or special-product sets
+  if ((s.card_count || 0) < 80 && !/jumpstart/i.test(s.name)) return null;
+
+  const name = s.name;
+  const code = s.code;
+  const date = new Date(s.released_at || "2000-01-01");
+  if (isNaN(date)) return null;
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const yyyymm = year * 100 + month;
+
+  // Format the year label like "Apr 2026"
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const yearLabel = `${MONTHS[date.getMonth()]} ${year}`;
+
+  // Jumpstart products → Jumpstart Booster category (24/box)
+  if (/jumpstart/i.test(name)) {
+    return { category: "Jumpstart Booster", entry: { name, year: yearLabel, packs: 24, code, _sort: yyyymm } };
+  }
+
+  // Play Booster era: Murders at Karlov Manor (Feb 2024) onward
+  if (yyyymm >= 202402) {
+    // 36 packs/box for early 2024 Play Boosters, 30 for Feb 2025 onward
+    const packs = yyyymm >= 202502 ? 30 : 36;
+    return { category: "Play Booster", entry: { name, year: yearLabel, packs, code, _sort: yyyymm } };
+  }
+
+  // Set Booster era: Zendikar Rising (Sep 2020) through Jan 2024 (LCI Nov 2023)
+  // Same sets also had Draft Boosters available.
+  // We surface the Draft Booster list for that era (36 packs/box, the more common draft product).
+  if (yyyymm >= 202009 && yyyymm <= 202401) {
+    return [
+      { category: "Draft Booster",  entry: { name, year: yearLabel, packs: 36, code, _sort: yyyymm } },
+      { category: "Set Booster",    entry: { name, year: yearLabel, packs: 30, code, _sort: yyyymm } },
+    ];
+  }
+
+  // Pre-Set-Booster era: Draft Booster only, 36 packs/box.
+  // Limit how far back we go to keep the list manageable (last ~20 years pre-2020).
+  if (yyyymm >= 200001) {
+    return { category: "Draft Booster", entry: { name, year: yearLabel, packs: 36, code, _sort: yyyymm } };
+  }
+  return null;
+}
+
+function buildSetsFromScryfall(scryfallSets) {
+  const out = { "Play Booster": [], "Draft Booster": [], "Set Booster": [], "Jumpstart Booster": [] };
+  for (const s of scryfallSets) {
+    const cls = classifyScryfallSet(s);
+    if (!cls) continue;
+    const arr = Array.isArray(cls) ? cls : [cls];
+    arr.forEach(c => { if (out[c.category]) out[c.category].push(c.entry); });
+  }
+  // Sort each category by release date desc
+  Object.keys(out).forEach(k => {
+    out[k].sort((a,b) => b._sort - a._sort);
+    out[k].forEach(e => delete e._sort);
+  });
+  // Drop empty categories so the dropdown stays clean
+  Object.keys(out).forEach(k => { if (!out[k].length) delete out[k]; });
+  return out;
+}
+
+function readSetsCache() {
+  try {
+    const raw = localStorage.getItem(SETS_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.t || !obj.data) return null;
+    if (Date.now() - obj.t > SETS_TTL_MS) return null;
+    return obj.data;
+  } catch (_) { return null; }
+}
+
+function writeSetsCache(data) {
+  try { localStorage.setItem(SETS_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (_) {}
+}
+
+// Two fetch strategies, mirroring the spoiler approach.
+async function fetchSetsDirect() {
+  const res = await fetch("https://api.scryfall.com/sets", { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error("Scryfall /sets HTTP " + res.status);
+  const data = await res.json();
+  if (!data.data || !Array.isArray(data.data)) throw new Error("Unexpected /sets shape");
+  return data.data;
+}
+
+async function fetchSetsViaProxy() {
+  const prompt = `Call https://api.scryfall.com/sets and return ONLY a valid JSON array (no markdown, no commentary). Each element must have: { "code": string, "name": string, "released_at": string YYYY-MM-DD, "set_type": string, "card_count": number, "digital": boolean }. Return ALL sets, not just recent ones.`;
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514", max_tokens: 16000,
+      tools: [{ type: "web_search_20250305", name: "web_search" }],
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+  if (!res.ok) throw new Error("Proxy HTTP " + res.status);
+  const data = await res.json();
+  let raw = "";
+  for (const block of (data.content || [])) { if (block.type === "text") raw += block.text; }
+  raw = raw.replace(/```json\s*/gi,"").replace(/```/g,"").trim();
+  const s = raw.indexOf("["), e = raw.lastIndexOf("]");
+  if (s === -1 || e === -1) throw new Error("No JSON array in proxy response");
+  return JSON.parse(raw.slice(s, e+1));
+}
+
+// Replace the global SETS, rebuild the category dropdown.
+function applyLiveSets(newSets, sourceLabel) {
+  // Preserve current selection
+  const catEl = document.getElementById("setCategory");
+  const nameEl = document.getElementById("setName");
+  const prevCat = catEl ? catEl.value : "";
+  const prevName = nameEl ? nameEl.selectedOptions[0]?.textContent : "";
+
+  // Replace global SETS
+  for (const k of Object.keys(SETS)) delete SETS[k];
+  Object.keys(newSets).forEach(k => { SETS[k] = newSets[k]; });
+
+  // Rebuild dropdown
+  buildCatSelect();
+
+  // Restore previous selection if possible
+  if (prevCat && catEl) {
+    const opt = Array.from(catEl.options).find(o => o.value === prevCat);
+    if (opt) {
+      catEl.value = prevCat;
+      onCatChange();
+      if (prevName && nameEl) {
+        const idx = SETS[prevCat]?.findIndex(s => s.name === prevName);
+        if (idx >= 0 && idx !== -1) {
+          nameEl.value = String(idx);
+          onSetChange();
+        }
+      }
+    }
+  }
+
+  // Show a small status indicator next to the set selector
+  const catLabel = document.querySelector('label[for="setCategory"]');
+  if (catLabel && sourceLabel) {
+    let badge = document.getElementById("setsLiveBadge");
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.id = "setsLiveBadge";
+      badge.style.cssText = "margin-left:8px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-dim);font-style:italic;letter-spacing:0;text-transform:none;";
+      catLabel.appendChild(badge);
+    }
+    badge.innerHTML = `<i class="ti ti-circle-check" style="color:var(--accent);font-size:0.85rem;vertical-align:-1px"></i> live · ${sourceLabel}`;
+  }
+}
+
+async function refreshSetsFromScryfall() {
+  // 1) Try cache first for instant load
+  const cached = readSetsCache();
+  if (cached) {
+    applyLiveSets(cached, "cached");
+  }
+
+  // 2) Refresh in the background (or fetch fresh if no cache)
+  try {
+    let raw, source;
+    try { raw = await fetchSetsDirect(); source = "scryfall"; }
+    catch (e1) {
+      try { raw = await fetchSetsViaProxy(); source = "via proxy"; }
+      catch (e2) {
+        if (!cached) console.warn("Live sets unavailable; using bundled list. " + e1.message + " / " + e2.message);
+        return;
+      }
+    }
+    const built = buildSetsFromScryfall(raw);
+    writeSetsCache(built);
+    applyLiveSets(built, source);
+  } catch (e) { /* silent — bundled SETS are the fallback */ }
+}
+
+// Kick off the refresh after initial render
+refreshSetsFromScryfall();
+
 
 const THEMES = [
   { id:"dimir",   name:"Dimir" },
@@ -2471,9 +2739,8 @@ updateTimerDisplay();
   // Stable IDs for each section, in source order.
   const SECTION_IDS = [
     "mod-set-selection",
-    "mod-metrics",
+    "mod-cost-summary",
     "mod-prizes",
-    "mod-grand-total",
     "mod-spoiler",
     "mod-timer",
     "mod-tournament",
