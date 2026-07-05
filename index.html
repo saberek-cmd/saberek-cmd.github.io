@@ -344,6 +344,10 @@
     .match-player.left { justify-content: flex-start; text-align: left; }
     .vs-pill { justify-self: center; font-size: 0.55rem; }
     .panel, .grand-total-panel { padding: 1rem 1.1rem; }
+    .pack-warning { padding: 0.75rem 0.85rem; gap: 9px; margin-top: 0.85rem; }
+    .pack-warning .warning-icon { font-size: 1.15rem; }
+    .pack-warning .warning-title { font-size: 0.7rem; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .pack-warning .warning-detail { font-size: 0.86rem; line-height: 1.4; }
   }
   /* Below ~480px wide column: medium-compact */
   @container module (min-width: 360.01px) and (max-width: 480px) {
@@ -353,6 +357,15 @@
     .archetype-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
     .timer-display { font-size: 2.8rem; }
     .card-grid { grid-template-columns: repeat(3, 1fr); }
+    .pack-warning .warning-title { font-size: 0.75rem; }
+    .pack-warning .warning-detail { font-size: 0.92rem; }
+  }
+  /* Very tight column (<280px) — extreme compaction */
+  @container module (max-width: 280px) {
+    .pack-warning { flex-direction: column; padding: 0.7rem 0.8rem; gap: 6px; }
+    .pack-warning .warning-icon { align-self: flex-start; }
+    .pack-warning .warning-title { font-size: 0.66rem; }
+    .pack-warning .warning-detail { font-size: 0.8rem; }
   }
 
   /* ── Draft Mode — focus on Spoiler / Timer / Tournament ── */
@@ -383,12 +396,18 @@
 
   /* ── Cost Summary wrapper (metrics + grand total) ─────── */
   .cost-summary { display: block; }
+  /* Grid-mode overrides for the merged cost-summary column */
   main.container.grid-mode .cost-summary {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    /* Do NOT force height:100% — let content define the height so the
+       warning banner has room to render fully without clipping. */
   }
   main.container.grid-mode .cost-summary .grand-total-panel { margin-bottom: 0; }
+  main.container.grid-mode .cost-summary .pack-warning {
+    margin-top: 1rem;
+    flex-shrink: 0;
+  }
 
   /* ── View Control Bar ─────────────────────────────────── */
   .view-bar {
@@ -903,7 +922,10 @@
     color: #f0c890;
     animation: warningFlash 0.5s ease-out;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    /* Ensure the warning never gets clipped when nested inside constrained flex parents */
+    flex-shrink: 0;
+    min-height: min-content;
   }
   .pack-warning::before {
     content: '';
@@ -911,14 +933,19 @@
     top: 0; left: 0; bottom: 0;
     width: 3px;
     background: linear-gradient(180deg, #f0a040, #d4782a);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   }
   .pack-warning .warning-icon {
     font-size: 1.5rem;
     color: #f0a040;
     flex-shrink: 0;
     margin-top: 2px;
+    line-height: 1;
   }
-  .pack-warning .warning-body { flex: 1; }
+  .pack-warning .warning-body {
+    flex: 1;
+    min-width: 0;   /* allow shrink/wrap without overflow */
+  }
   .pack-warning .warning-title {
     font-family: 'Cinzel', serif;
     font-size: 0.82rem;
@@ -926,13 +953,18 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #f0a040;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    line-height: 1.25;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .pack-warning .warning-detail {
     font-family: 'Crimson Pro', serif;
     font-size: 0.98rem;
     color: #f0d0a0;
-    line-height: 1.4;
+    line-height: 1.45;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .pack-warning .warning-detail strong { color: #f0a040; }
   @keyframes warningFlash {
@@ -955,6 +987,69 @@
     color: var(--text-mid);
   }
   .sort-group select { width: auto; min-width: 160px; }
+
+  /* ── Spoiler search ───────────────────────────────────── */
+  .spoiler-search-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .spoiler-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .spoiler-search-icon {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 16px;
+    pointer-events: none;
+  }
+  .spoiler-search-input {
+    width: 100%;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    padding: 0.55rem 38px 0.55rem 38px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .spoiler-search-input:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.12), 0 0 12px rgba(var(--accent-rgb),0.08);
+    background: var(--surface);
+  }
+  .spoiler-search-input::placeholder { color: var(--text-dim); font-style: italic; }
+  .spoiler-search-clear {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-dim); cursor: pointer;
+    padding: 4px;
+    display: flex; align-items: center;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .spoiler-search-clear:hover { color: var(--ruby); background: rgba(176,48,80,0.12); }
+  .spoiler-search-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-style: italic;
+    flex-shrink: 0;
+  }
+  .card-tile .card-name mark {
+    background: rgba(var(--accent-rgb),0.32);
+    color: var(--accent-light);
+    padding: 0 1px;
+    border-radius: 2px;
+  }
 
   .card-grid {
     display: grid;
@@ -1757,6 +1852,20 @@
         </select>
       </div>
     </div>
+    <div class="spoiler-search-row">
+      <div class="spoiler-search-wrap">
+        <i class="ti ti-search spoiler-search-icon"></i>
+        <input type="text" id="spoilerSearch" class="spoiler-search-input"
+               placeholder="Filter cards by name…"
+               autocomplete="off"
+               oninput="onSpoilerSearch()">
+        <button type="button" id="spoilerSearchClear" class="spoiler-search-clear"
+                onclick="clearSpoilerSearch()" aria-label="Clear card search" style="display:none">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <span class="spoiler-search-count" id="spoilerSearchCount"></span>
+    </div>
     <div id="spoilerBody">
       <div class="state-empty">
         <i class="ti ti-cards"></i>
@@ -2181,6 +2290,20 @@ function onSetChange() {
 
 function onSortChange() { sortAndRender(); }
 
+function onSpoilerSearch() {
+  const q = document.getElementById("spoilerSearch").value;
+  document.getElementById("spoilerSearchClear").style.display = q ? "flex" : "none";
+  sortAndRender();
+}
+
+function clearSpoilerSearch() {
+  const inp = document.getElementById("spoilerSearch");
+  inp.value = "";
+  document.getElementById("spoilerSearchClear").style.display = "none";
+  sortAndRender();
+  inp.focus();
+}
+
 /* ── Calculator ───────────────────────────────────────────── */
 function fmt(n) { return "$" + n.toFixed(2); }
 
@@ -2265,6 +2388,12 @@ function setSpoilerHTML(h) { document.getElementById("spoilerBody").innerHTML = 
 
 function clearSpoiler() {
   allCards = []; filteredCards = [];
+  const s = document.getElementById("spoilerSearch");
+  if (s) s.value = "";
+  const c = document.getElementById("spoilerSearchClear");
+  if (c) c.style.display = "none";
+  const cnt = document.getElementById("spoilerSearchCount");
+  if (cnt) cnt.textContent = "";
   setSpoilerHTML(`<div class="state-empty"><i class="ti ti-cards"></i><p>Select a set above to load card data</p></div>`);
 }
 
@@ -2330,6 +2459,11 @@ Only rares/mythics, up to 48 cards. Empty array [] if none found.`;
 async function loadSpoiler(code) {
   if (isFetching) return;
   isFetching = true; allCards=[]; filteredCards=[];
+  // Reset any active search when loading a new set
+  const s = document.getElementById("spoilerSearch");
+  if (s) s.value = "";
+  const c = document.getElementById("spoilerSearchClear");
+  if (c) c.style.display = "none";
   showSkeletons();
   let cards=null, source="", errors=[];
   try { cards=await fetchScryfall(code); source="Scryfall direct"; }
@@ -2353,9 +2487,13 @@ async function loadSpoiler(code) {
 
 function sortAndRender() {
   const mode = document.getElementById("sortMode").value;
+  const searchEl = document.getElementById("spoilerSearch");
+  const q = (searchEl ? searchEl.value : "").toLowerCase().trim();
+
   filteredCards = allCards.filter(c => {
-    if (mode==="usd")      return c.usd && parseFloat(c.usd)>0;
-    if (mode==="usd_foil") return c.usd_foil && parseFloat(c.usd_foil)>0;
+    if (mode==="usd" && !(c.usd && parseFloat(c.usd)>0)) return false;
+    if (mode==="usd_foil" && !(c.usd_foil && parseFloat(c.usd_foil)>0)) return false;
+    if (q && !c.name.toLowerCase().includes(q)) return false;
     return true;
   });
   filteredCards.sort((a,b) => {
@@ -2363,6 +2501,15 @@ function sortAndRender() {
     if (mode==="rarity") return (RARITY_ORDER[a.rarity]??9)-(RARITY_ORDER[b.rarity]??9);
     return a.name.localeCompare(b.name);
   });
+
+  // Update count indicator
+  const countEl = document.getElementById("spoilerSearchCount");
+  if (countEl) {
+    if (allCards.length === 0) countEl.textContent = "";
+    else if (q) countEl.textContent = `${filteredCards.length} of ${allCards.length}`;
+    else countEl.textContent = `${filteredCards.length} card${filteredCards.length===1?"":"s"}`;
+  }
+
   currentPage=1; renderPage();
 }
 
@@ -2370,18 +2517,32 @@ function renderPage() {
   const tp    = Math.max(1, Math.ceil(filteredCards.length/PAGE_SIZE));
   if (currentPage>tp) currentPage=tp;
   const mode  = document.getElementById("sortMode").value;
+  const searchEl = document.getElementById("spoilerSearch");
+  const q = (searchEl ? searchEl.value : "").toLowerCase().trim();
   const slice = filteredCards.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  // Empty state for a search that filters everything out
+  if (filteredCards.length === 0 && allCards.length > 0) {
+    setSpoilerHTML(`<div class="state-empty">
+      <i class="ti ti-search-off"></i>
+      <p>No cards match "<strong>${esc(q)}</strong>"</p>
+      <p style="font-size:0.85rem;margin-top:6px;opacity:0.7">Try a different search term or clear the filter.</p>
+    </div>`);
+    return;
+  }
+
   let h = `<div class="card-grid">`;
   slice.forEach(card => {
     const priceVal = mode==="usd_foil" ? card.usd_foil : (card.usd||card.usd_foil);
     const priceStr = priceVal ? "$"+parseFloat(priceVal).toFixed(2) : "—";
     const foilNote = mode==="usd_foil"&&card.usd_foil ? " foil" : (!card.usd&&card.usd_foil?" (foil)":"");
     const rCls    = RARITY_CLS[card.rarity] || "rarity-common";
+    const displayName = q ? highlightCardName(card.name, q) : esc(card.name);
     h += `<div class="card-tile" onclick="window.open('${esc(card.scryfall_uri)}','_blank')" role="button" tabindex="0" aria-label="${esc(card.name)}, ${card.rarity}, ${priceStr}">`;
     h += card.image_uri
       ? `<img src="${esc(card.image_uri)}" alt="${esc(card.name)}" loading="lazy">`
       : `<div class="skeleton"></div>`;
-    h += `<span class="card-name">${esc(card.name)}</span>
+    h += `<span class="card-name">${displayName}</span>
            <span class="card-price">${esc(priceStr+foilNote)}</span>
            <span class="card-rarity ${rCls}">${esc(card.rarity)}</span>
           </div>`;
@@ -2394,6 +2555,15 @@ function renderPage() {
     </div>
     <p class="attr">Prices &amp; images from <a href="https://scryfall.com" target="_blank" rel="noopener">Scryfall.com</a> · Click any card to view full details</p>`;
   setSpoilerHTML(h);
+}
+
+function highlightCardName(name, q) {
+  const lower = name.toLowerCase();
+  const iq = lower.indexOf(q);
+  if (iq < 0) return esc(name);
+  return esc(name.slice(0, iq)) +
+    '<mark>' + esc(name.slice(iq, iq + q.length)) + '</mark>' +
+    esc(name.slice(iq + q.length));
 }
 
 function goPage(p) {
