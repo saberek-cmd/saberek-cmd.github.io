@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>MTG Draft Cost Calculator</title>
+<title>MTG Draft Tools</title>
 
 <!-- ── PWA meta ── -->
 <meta name="description" content="Price out Magic: The Gathering draft events — costs, prizes, set spoilers, archetypes, Swiss pairings, and a draft timer.">
@@ -1785,8 +1785,8 @@
 </div>
 
 <header class="site-header">
-  <h1 class="site-title">Draft Cost Calculator</h1>
-  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
+  <h1 class="site-title">MTG Draft Tools</h1>
+  <p class="site-subtitle">Useful tools for your Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -2335,7 +2335,7 @@ function renderSelectedChips() {
   container.innerHTML = list.map((idx, i) => {
     const s = SETS[cat][idx];
     if (!s) return "";
-    return `<span class="set-chip${i===0?' primary':''}" title="${i===0?'Primary set — drives calculator, spoiler, and archetypes':'Additional reference set'}">
+    return `<span class="set-chip${i===0?' primary':''}" title="${i===0?'Primary set — drives calculator, and archetypes':'Additional reference set'}">
       <span class="chip-name">${tEscBasic(s.name)}</span>
       <button type="button" class="chip-remove" onclick="removeSetSelection(${idx})" aria-label="Remove ${tEscBasic(s.name)}"><i class="ti ti-x"></i></button>
     </span>`;
