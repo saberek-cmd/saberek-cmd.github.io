@@ -546,6 +546,50 @@
   .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
   @media (max-width: 520px) { .set-row { grid-template-columns: 1fr; } }
 
+  /* ── Multi-set selection chips ────────────────────────── */
+  .multi-hint {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-left: 4px;
+  }
+  .selected-set-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 8px;
+    min-height: 0;
+  }
+  .selected-set-chips:empty { display: none; }
+  .set-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 6px 5px 11px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    max-width: 100%;
+  }
+  .set-chip.primary {
+    background: rgba(var(--accent-rgb),0.14);
+    border-color: var(--accent-dim);
+    color: var(--accent-light);
+    font-weight: 600;
+  }
+  .set-chip .chip-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .set-chip .chip-remove {
+    background: none; border: none;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 14px; line-height: 1;
+    display: flex; align-items: center; padding: 2px;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .set-chip .chip-remove:hover { color: var(--ruby); background: rgba(176,48,80,0.15); }
+
   /* ── Searchable set combobox ──────────────────────────── */
   .set-combo { position: relative; }
   .set-combo-input {
@@ -1073,6 +1117,26 @@
   .card-tile:hover img {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 12px 30px rgba(0,0,0,0.6), 0 0 20px rgba(201,168,76,0.15), 0 0 0 1px rgba(201,168,76,0.2);
+  }
+  .card-image-wrap {
+    position: relative;
+    width: 100%;
+  }
+  .card-set-badge {
+    position: absolute;
+    top: 6px; left: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: rgba(13,13,18,0.85);
+    border: 1px solid rgba(var(--accent-rgb),0.5);
+    color: var(--accent-light);
+    backdrop-filter: blur(4px);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    pointer-events: none;
   }
   .card-tile .card-name {
     font-family: 'Crimson Pro', serif;
@@ -1748,7 +1812,8 @@
         <select id="setCategory" onchange="onCatChange()"></select>
       </div>
       <div class="field">
-        <label for="setNameInput">Set Name</label>
+        <label for="setNameInput">Set Name <span class="multi-hint">(select up to 3)</span></label>
+        <div id="selectedSetChips" class="selected-set-chips"></div>
         <div class="set-combo" id="setCombo">
           <input type="text" id="setNameInput" class="set-combo-input"
                  placeholder="— Select booster type first —"
@@ -1756,7 +1821,7 @@
                  oninput="filterSets()"
                  onfocus="openSetMenu()"
                  onkeydown="setComboKey(event)">
-          <button type="button" class="set-combo-clear" id="setComboClear" onclick="clearSetSelection()" title="Clear selection" aria-label="Clear set selection" tabindex="-1" style="display:none">
+          <button type="button" class="set-combo-clear" id="setComboClear" onclick="clearSetSelection()" title="Clear all selections" aria-label="Clear all set selections" tabindex="-1" style="display:none">
             <i class="ti ti-x"></i>
           </button>
           <i class="ti ti-chevron-down set-combo-caret"></i>
@@ -2100,7 +2165,7 @@ const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Boos
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
+let prizes = [{ place:"1st", packs:3 }, { place:"2nd", packs:2 }, { place:"3rd", packs:1 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -2122,6 +2187,8 @@ function onCatChange() {
   const clearBtn = document.getElementById("setComboClear");
   input.value = "";
   input.dataset.selectedIdx = "";
+  input.dataset.selectedIndices = "[]";
+  renderSelectedChips();
   clearBtn.style.display = "none";
   closeSetMenu();
   document.getElementById("setMeta").style.display = "none";
@@ -2144,7 +2211,7 @@ function renderSetMenu(query) {
   const cat = document.getElementById("setCategory").value;
   const menu = document.getElementById("setComboMenu");
   const input = document.getElementById("setNameInput");
-  const selectedIdx = input.dataset.selectedIdx;
+  const selectedList = getSelectedIndices();
   if (!cat || cat === "custom" || !SETS[cat]) {
     menu.innerHTML = "";
     return;
@@ -2161,14 +2228,22 @@ function renderSetMenu(query) {
     menu.innerHTML = `<div class="set-combo-empty">No sets match "${tEscBasic(query)}"</div>`;
     return;
   }
+  const atMax = selectedList.length >= MAX_SETS;
   menu.innerHTML = results.map((r, i) => {
     const highlighted = q ? highlightMatch(r.set.name, q) : r.set.name;
-    const isSelected = String(r.idx) === selectedIdx;
+    const selIdx = selectedList.indexOf(r.idx);
+    const isSelected = selIdx >= 0;
+    const badge = isSelected
+      ? `<i class="ti ti-check" style="color:var(--accent);font-size:14px"></i>`
+      : (atMax ? `<span style="font-size:0.7rem;color:var(--text-dim);font-style:italic">replaces primary</span>` : '');
     return `<div class="set-combo-option${isSelected?' selected':''}" role="option"
                  data-idx="${r.idx}" data-listidx="${i}"
                  onclick="selectSetByIndex(${r.idx})">
               <span>${highlighted}</span>
-              <span class="opt-year">${tEscBasic(r.set.year || '')}</span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                ${badge}
+                <span class="opt-year">${tEscBasic(r.set.year || '')}</span>
+              </span>
             </div>`;
   }).join("");
 }
@@ -2233,26 +2308,114 @@ function setComboKey(e) {
   }
 }
 
+const MAX_SETS = 3;
+
+function getSelectedIndices() {
+  const input = document.getElementById("setNameInput");
+  try { return JSON.parse(input.dataset.selectedIndices || "[]"); }
+  catch (_) { return []; }
+}
+
+function setSelectedIndices(list) {
+  const input = document.getElementById("setNameInput");
+  input.dataset.selectedIndices = JSON.stringify(list);
+  input.dataset.selectedIdx = list.length ? String(list[0]) : "";
+  renderSelectedChips();
+}
+
+function renderSelectedChips() {
+  const container = document.getElementById("selectedSetChips");
+  if (!container) return;
+  const cat = document.getElementById("setCategory").value;
+  const list = getSelectedIndices();
+  if (!cat || cat === "custom" || !SETS[cat] || !list.length) {
+    container.innerHTML = "";
+    return;
+  }
+  container.innerHTML = list.map((idx, i) => {
+    const s = SETS[cat][idx];
+    if (!s) return "";
+    return `<span class="set-chip${i===0?' primary':''}" title="${i===0?'Primary set — drives calculator, spoiler, and archetypes':'Additional reference set'}">
+      <span class="chip-name">${tEscBasic(s.name)}</span>
+      <button type="button" class="chip-remove" onclick="removeSetSelection(${idx})" aria-label="Remove ${tEscBasic(s.name)}"><i class="ti ti-x"></i></button>
+    </span>`;
+  }).join("");
+}
+
 function selectSetByIndex(idx) {
   const cat = document.getElementById("setCategory").value;
   const set = SETS[cat] && SETS[cat][idx];
   if (!set) return;
-  const input = document.getElementById("setNameInput");
-  input.value = set.name;
-  input.dataset.selectedIdx = String(idx);
-  document.getElementById("setComboClear").style.display = "flex";
+  const list = getSelectedIndices();
+  const already = list.indexOf(idx);
+  if (already >= 0) {
+    // Already selected — treat as promotion to primary if not already
+    if (already !== 0) {
+      list.splice(already, 1);
+      list.unshift(idx);
+      setSelectedIndices(list);
+      updatePrimaryDisplay();
+    }
+    closeSetMenu();
+    return;
+  }
+  if (list.length >= MAX_SETS) {
+    // At limit: replace primary with this new selection
+    list[0] = idx;
+  } else {
+    list.push(idx);
+  }
+  setSelectedIndices(list);
+  updatePrimaryDisplay();
   closeSetMenu();
+  // Clear the search text so the input shows the primary selection name
+  document.getElementById("setNameInput").value = "";
   onSetChange();
+}
+
+function removeSetSelection(idx) {
+  const list = getSelectedIndices();
+  const i = list.indexOf(idx);
+  if (i < 0) return;
+  list.splice(i, 1);
+  setSelectedIndices(list);
+  if (list.length === 0) {
+    clearSetSelection();
+  } else {
+    updatePrimaryDisplay();
+    onSetChange();
+  }
+}
+
+function updatePrimaryDisplay() {
+  const input = document.getElementById("setNameInput");
+  const clearBtn = document.getElementById("setComboClear");
+  const list = getSelectedIndices();
+  if (list.length === 0) {
+    input.value = "";
+    clearBtn.style.display = "none";
+    return;
+  }
+  const cat = document.getElementById("setCategory").value;
+  const primary = SETS[cat] && SETS[cat][list[0]];
+  if (primary) input.placeholder = `Primary: ${primary.name} — add or replace…`;
+  clearBtn.style.display = "flex";
 }
 
 function clearSetSelection() {
   const input = document.getElementById("setNameInput");
   input.value = "";
   input.dataset.selectedIdx = "";
+  input.dataset.selectedIndices = "[]";
+  renderSelectedChips();
   document.getElementById("setComboClear").style.display = "none";
   document.getElementById("setMeta").style.display = "none";
   hideArchetypes();
   clearSpoiler();
+  const cat = document.getElementById("setCategory").value;
+  if (cat && cat !== "custom" && SETS[cat]) {
+    input.placeholder = `Search ${SETS[cat].length} sets…`;
+  }
   input.focus();
   renderSetMenu("");
   openSetMenu();
@@ -2284,7 +2447,11 @@ function onSetChange() {
   document.getElementById("setMeta").style.display = "flex";
   document.getElementById("srcTag").style.display = "none";
   recalc();
-  loadSpoiler(set.code);
+
+  // Collect all selected set codes (primary first) so spoiler shows cards from every chip
+  const allIndices = typeof getSelectedIndices === "function" ? getSelectedIndices() : [idx];
+  const allCodes = allIndices.map(i => SETS[cat][i] && SETS[cat][i].code).filter(Boolean);
+  loadSpoiler(allCodes.length ? allCodes : [set.code]);
   renderArchetypes(set.code);
 }
 
@@ -2456,8 +2623,12 @@ Only rares/mythics, up to 48 cards. Empty array [] if none found.`;
   return JSON.parse(raw.slice(s,e+1));
 }
 
-async function loadSpoiler(code) {
+async function loadSpoiler(codes) {
   if (isFetching) return;
+  // Accept a single code (backward compat) or an array
+  const codeList = Array.isArray(codes) ? codes.filter(Boolean) : (codes ? [codes] : []);
+  if (codeList.length === 0) { clearSpoiler(); return; }
+
   isFetching = true; allCards=[]; filteredCards=[];
   // Reset any active search when loading a new set
   const s = document.getElementById("spoilerSearch");
@@ -2465,24 +2636,56 @@ async function loadSpoiler(code) {
   const c = document.getElementById("spoilerSearchClear");
   if (c) c.style.display = "none";
   showSkeletons();
-  let cards=null, source="", errors=[];
-  try { cards=await fetchScryfall(code); source="Scryfall direct"; }
-  catch(e1) {
-    errors.push("Direct: "+e1.message);
-    try { cards=await fetchViaProxy(code); source="Anthropic proxy"; }
-    catch(e2) { errors.push("Proxy: "+e2.message); }
-  }
-  if (!cards) {
-    setSpoilerHTML(`<div class="state-error"><strong><i class="ti ti-alert-circle"></i> Failed to load card data</strong>Both fetch strategies failed.<code>${esc(errors.join("\n"))}</code></div>`);
+
+  // Fetch each set in parallel using the same dual-path strategy
+  const results = await Promise.all(codeList.map(async (code) => {
+    try {
+      const cards = await fetchScryfall(code);
+      return { code, cards, source: "direct" };
+    } catch (e1) {
+      try {
+        const cards = await fetchViaProxy(code);
+        return { code, cards, source: "proxy" };
+      } catch (e2) {
+        return { code, cards: null, error: e1.message + " / " + e2.message };
+      }
+    }
+  }));
+
+  // Merge — tag each card with its set code for display, dedupe by (set_code + name)
+  const merged = [];
+  const seen = new Set();
+  const failedCodes = [];
+  let anySource = "";
+  results.forEach(r => {
+    if (!r.cards) { failedCodes.push(r.code); return; }
+    anySource = anySource || r.source;
+    r.cards.forEach(card => {
+      const key = r.code + "::" + card.name;
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push({ ...card, _setCode: r.code });
+    });
+  });
+
+  if (merged.length === 0) {
+    if (failedCodes.length === codeList.length) {
+      setSpoilerHTML(`<div class="state-error"><strong><i class="ti ti-alert-circle"></i> Failed to load card data</strong>All sets failed to fetch.<code>${esc(failedCodes.join(", "))}</code></div>`);
+    } else {
+      setSpoilerHTML(`<div class="state-empty"><i class="ti ti-cards"></i><p>No rare or mythic cards found in the selected sets.</p></div>`);
+    }
     isFetching=false; return;
   }
-  if (cards.length===0) {
-    setSpoilerHTML(`<div class="state-empty"><i class="ti ti-cards"></i><p>No rare or mythic cards found for this set.</p></div>`);
-    isFetching=false; return;
-  }
+
   const srcTag=document.getElementById("srcTag");
-  if(srcTag){ srcTag.textContent=source; srcTag.style.display="inline-block"; }
-  allCards=cards; sortAndRender(); isFetching=false;
+  if(srcTag){
+    const label = codeList.length > 1
+      ? `${codeList.length} sets · ${anySource}`
+      : anySource === "direct" ? "Scryfall direct" : "Anthropic proxy";
+    srcTag.textContent = label;
+    srcTag.style.display="inline-block";
+  }
+  allCards = merged; sortAndRender(); isFetching = false;
 }
 
 function sortAndRender() {
@@ -2532,16 +2735,25 @@ function renderPage() {
   }
 
   let h = `<div class="card-grid">`;
+  // If multiple sets contributed to the merged pool, show a small set-code badge on each card
+  const uniqueSets = new Set(filteredCards.map(c => c._setCode).filter(Boolean));
+  const showSetBadge = uniqueSets.size > 1;
+
   slice.forEach(card => {
     const priceVal = mode==="usd_foil" ? card.usd_foil : (card.usd||card.usd_foil);
     const priceStr = priceVal ? "$"+parseFloat(priceVal).toFixed(2) : "—";
     const foilNote = mode==="usd_foil"&&card.usd_foil ? " foil" : (!card.usd&&card.usd_foil?" (foil)":"");
     const rCls    = RARITY_CLS[card.rarity] || "rarity-common";
     const displayName = q ? highlightCardName(card.name, q) : esc(card.name);
+    const setBadge = showSetBadge && card._setCode
+      ? `<span class="card-set-badge">${esc(card._setCode.toUpperCase())}</span>`
+      : "";
     h += `<div class="card-tile" onclick="window.open('${esc(card.scryfall_uri)}','_blank')" role="button" tabindex="0" aria-label="${esc(card.name)}, ${card.rarity}, ${priceStr}">`;
+    h += `<div class="card-image-wrap">`;
     h += card.image_uri
       ? `<img src="${esc(card.image_uri)}" alt="${esc(card.name)}" loading="lazy">`
       : `<div class="skeleton"></div>`;
+    h += setBadge + `</div>`;
     h += `<span class="card-name">${displayName}</span>
            <span class="card-price">${esc(priceStr+foilNote)}</span>
            <span class="card-rarity ${rCls}">${esc(card.rarity)}</span>
@@ -3477,8 +3689,8 @@ updateTimerDisplay();
 
   // ── Web App Manifest (as Blob) ──
   const manifest = {
-    name: "MTG Draft Cost Calculator",
-    short_name: "Draft Calc",
+    name: "MTG Draft Tools",
+    short_name: "Draft Tools",
     description: "Price out Magic: The Gathering draft events, prizes, spoilers, archetypes, pairings, and a timer.",
     start_url: ".",
     scope: ".",
