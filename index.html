@@ -330,7 +330,7 @@
     .metric-sub { font-size: 0.7rem; }
     .grand-label { font-size: 0.74rem; }
     .grand-value { font-size: 1.95rem; }
-    .grand-breakdown, .grand-per-player { font-size: 0.78rem; }
+    .grand-breakdown, .grand-per-player { font-size: 0.92rem; }
     .prize-table-head { font-size: 0.58rem; }
     .archetype-grid { grid-template-columns: 1fr; }
     .archetype-name { font-size: 0.86rem; }
@@ -526,6 +526,120 @@
   /* ── Set selector row ─────────────────────────────────── */
   .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
   @media (max-width: 520px) { .set-row { grid-template-columns: 1fr; } }
+
+  /* ── Searchable set combobox ──────────────────────────── */
+  .set-combo { position: relative; }
+  .set-combo-input {
+    width: 100%;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    padding: 0.55rem 62px 0.55rem 0.75rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .set-combo-input:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb),0.12), 0 0 12px rgba(var(--accent-rgb),0.08);
+    background: var(--surface);
+  }
+  .set-combo-input:disabled { opacity: 0.55; cursor: not-allowed; }
+  .set-combo-input::placeholder { color: var(--text-dim); font-style: italic; font-family: 'Crimson Pro', serif; }
+
+  .set-combo-caret {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 14px;
+    pointer-events: none;
+    transition: transform 0.2s;
+  }
+  .set-combo.open .set-combo-caret { transform: translateY(-50%) rotate(180deg); }
+
+  .set-combo-clear {
+    position: absolute;
+    right: 34px; top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
+  }
+  .set-combo-clear:hover { color: var(--ruby); background: rgba(176,48,80,0.12); }
+
+  .set-combo-menu {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; right: 0;
+    z-index: 40;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-deep);
+    max-height: 280px;
+    overflow-y: auto;
+    opacity: 0; visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hi) transparent;
+    padding: 5px;
+  }
+  .set-combo-menu::-webkit-scrollbar { width: 7px; }
+  .set-combo-menu::-webkit-scrollbar-track { background: transparent; }
+  .set-combo-menu::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+  .set-combo-menu::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+  .set-combo.open .set-combo-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+
+  .set-combo-option {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+  }
+  .set-combo-option:hover,
+  .set-combo-option.highlighted {
+    background: rgba(var(--accent-rgb),0.14);
+    color: var(--accent-light);
+  }
+  .set-combo-option.selected {
+    background: rgba(var(--accent-rgb),0.08);
+    color: var(--accent-light);
+    font-weight: 600;
+  }
+  .set-combo-option .opt-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .set-combo-option mark {
+    background: rgba(var(--accent-rgb),0.32);
+    color: var(--accent-light);
+    padding: 0 1px;
+    border-radius: 2px;
+  }
+  .set-combo-empty {
+    padding: 14px 12px;
+    text-align: center;
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.88rem;
+  }
 
   .set-meta {
     display: flex; align-items: center; gap: 8px;
@@ -753,7 +867,13 @@
     color: var(--gold-dim);
     margin-bottom: 4px;
   }
-  .grand-breakdown { font-size: 0.88rem; color: var(--text-dim); font-style: italic; }
+  .grand-breakdown {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    font-style: italic;
+    line-height: 1.4;
+    margin-top: 2px;
+  }
   .grand-value {
     font-family: 'JetBrains Mono', monospace;
     font-size: 2.4rem;
@@ -762,7 +882,63 @@
     line-height: 1;
     text-shadow: 0 0 20px rgba(var(--accent-rgb),0.3);
   }
-  .grand-per-player { font-size: 0.78rem; color: var(--text-dim); text-align: right; margin-top: 4px; font-style: italic; }
+  .grand-per-player {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    text-align: right;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* ── Pack shortage warning ────────────────────────────── */
+  .pack-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 1rem;
+    padding: 0.9rem 1.15rem;
+    background: linear-gradient(135deg, rgba(240,160,64,0.14), rgba(224,120,48,0.08));
+    border: 1px solid rgba(240,160,64,0.4);
+    border-radius: var(--radius-lg);
+    color: #f0c890;
+    animation: warningFlash 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+  .pack-warning::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #f0a040, #d4782a);
+  }
+  .pack-warning .warning-icon {
+    font-size: 1.5rem;
+    color: #f0a040;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .pack-warning .warning-body { flex: 1; }
+  .pack-warning .warning-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f0a040;
+    margin-bottom: 4px;
+  }
+  .pack-warning .warning-detail {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.98rem;
+    color: #f0d0a0;
+    line-height: 1.4;
+  }
+  .pack-warning .warning-detail strong { color: #f0a040; }
+  @keyframes warningFlash {
+    0%   { opacity: 0; transform: translateY(-6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
 
   /* ── Spoiler section ──────────────────────────────────── */
   .spoiler-controls {
@@ -1477,8 +1653,20 @@
         <select id="setCategory" onchange="onCatChange()"></select>
       </div>
       <div class="field">
-        <label for="setName">Set Name</label>
-        <select id="setName" onchange="onSetChange()"></select>
+        <label for="setNameInput">Set Name</label>
+        <div class="set-combo" id="setCombo">
+          <input type="text" id="setNameInput" class="set-combo-input"
+                 placeholder="— Select booster type first —"
+                 disabled autocomplete="off"
+                 oninput="filterSets()"
+                 onfocus="openSetMenu()"
+                 onkeydown="setComboKey(event)">
+          <button type="button" class="set-combo-clear" id="setComboClear" onclick="clearSetSelection()" title="Clear selection" aria-label="Clear set selection" tabindex="-1" style="display:none">
+            <i class="ti ti-x"></i>
+          </button>
+          <i class="ti ti-chevron-down set-combo-caret"></i>
+          <div class="set-combo-menu" id="setComboMenu" role="listbox"></div>
+        </div>
       </div>
     </div>
     <div id="setMeta" class="set-meta" style="display:none">
@@ -1531,6 +1719,14 @@
       <div>
         <div class="grand-value" id="grand-total">$0.00</div>
         <div class="grand-per-player" id="gt-per-player">$0.00 per player</div>
+      </div>
+    </div>
+
+    <div class="pack-warning" id="packWarning" style="display:none" role="alert">
+      <i class="ti ti-alert-triangle warning-icon"></i>
+      <div class="warning-body">
+        <div class="warning-title">More Packs Needed Than One Box Contains</div>
+        <div class="warning-detail" id="packWarningDetail"></div>
       </div>
     </div>
   </div>
@@ -1795,7 +1991,7 @@ const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Boos
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:3 }, { place:"2nd", packs:2 }, { place:"3rd", packs:1 }];
+let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -1813,23 +2009,164 @@ function buildCatSelect() {
 
 function onCatChange() {
   const cat = document.getElementById("setCategory").value;
-  const sel = document.getElementById("setName");
-  sel.innerHTML = "";
+  const input = document.getElementById("setNameInput");
+  const clearBtn = document.getElementById("setComboClear");
+  input.value = "";
+  input.dataset.selectedIdx = "";
+  clearBtn.style.display = "none";
+  closeSetMenu();
   document.getElementById("setMeta").style.display = "none";
   hideArchetypes();
-  if (!cat || cat === "custom") { sel.innerHTML='<option value="">—</option>'; clearSpoiler(); return; }
-  sel.appendChild(Object.assign(document.createElement("option"), { value:"", textContent:"— Select set —" }));
-  SETS[cat].forEach((s,i) =>
-    sel.appendChild(Object.assign(document.createElement("option"), { value:i, textContent:s.name }))
-  );
+  if (!cat || cat === "custom") {
+    input.disabled = true;
+    input.placeholder = cat === "custom" ? "Custom mode — enter values manually below" : "— Select booster type first —";
+    clearSpoiler();
+    renderSetMenu("");
+    return;
+  }
+  input.disabled = false;
+  input.placeholder = `Search ${SETS[cat] ? SETS[cat].length : 0} sets…`;
   clearSpoiler();
+  renderSetMenu("");
 }
+
+// Build the filtered options list based on current category + search text.
+function renderSetMenu(query) {
+  const cat = document.getElementById("setCategory").value;
+  const menu = document.getElementById("setComboMenu");
+  const input = document.getElementById("setNameInput");
+  const selectedIdx = input.dataset.selectedIdx;
+  if (!cat || cat === "custom" || !SETS[cat]) {
+    menu.innerHTML = "";
+    return;
+  }
+  const q = (query || "").toLowerCase().trim();
+  const results = [];
+  SETS[cat].forEach((s, i) => {
+    const nameLower = s.name.toLowerCase();
+    if (!q || nameLower.includes(q) || (s.code && s.code.toLowerCase().includes(q))) {
+      results.push({ idx: i, set: s });
+    }
+  });
+  if (results.length === 0) {
+    menu.innerHTML = `<div class="set-combo-empty">No sets match "${tEscBasic(query)}"</div>`;
+    return;
+  }
+  menu.innerHTML = results.map((r, i) => {
+    const highlighted = q ? highlightMatch(r.set.name, q) : r.set.name;
+    const isSelected = String(r.idx) === selectedIdx;
+    return `<div class="set-combo-option${isSelected?' selected':''}" role="option"
+                 data-idx="${r.idx}" data-listidx="${i}"
+                 onclick="selectSetByIndex(${r.idx})">
+              <span>${highlighted}</span>
+              <span class="opt-year">${tEscBasic(r.set.year || '')}</span>
+            </div>`;
+  }).join("");
+}
+
+function highlightMatch(text, q) {
+  const lower = text.toLowerCase();
+  const iq = lower.indexOf(q);
+  if (iq < 0) return tEscBasic(text);
+  return tEscBasic(text.slice(0, iq)) +
+    '<mark>' + tEscBasic(text.slice(iq, iq + q.length)) + '</mark>' +
+    tEscBasic(text.slice(iq + q.length));
+}
+
+function tEscBasic(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function filterSets() {
+  const input = document.getElementById("setNameInput");
+  renderSetMenu(input.value);
+  openSetMenu();
+}
+
+function openSetMenu() {
+  const combo = document.getElementById("setCombo");
+  const input = document.getElementById("setNameInput");
+  if (input.disabled) return;
+  combo.classList.add("open");
+  // If nothing is filtered yet, show the whole list
+  if (!input.value) renderSetMenu("");
+}
+
+function closeSetMenu() {
+  const combo = document.getElementById("setCombo");
+  if (combo) combo.classList.remove("open");
+  // clear keyboard highlight
+  const hi = document.querySelector(".set-combo-option.highlighted");
+  if (hi) hi.classList.remove("highlighted");
+}
+
+function setComboKey(e) {
+  const menu = document.getElementById("setComboMenu");
+  const options = Array.from(menu.querySelectorAll(".set-combo-option"));
+  if (e.key === "Escape") { closeSetMenu(); return; }
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    openSetMenu();
+    if (!options.length) return;
+    let cur = options.findIndex(o => o.classList.contains("highlighted"));
+    if (e.key === "ArrowDown") cur = cur < options.length - 1 ? cur + 1 : 0;
+    else                       cur = cur > 0 ? cur - 1 : options.length - 1;
+    options.forEach(o => o.classList.remove("highlighted"));
+    options[cur].classList.add("highlighted");
+    options[cur].scrollIntoView({ block: "nearest" });
+    return;
+  }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    const hi = menu.querySelector(".set-combo-option.highlighted") ||
+               menu.querySelector(".set-combo-option");
+    if (hi) selectSetByIndex(parseInt(hi.dataset.idx, 10));
+  }
+}
+
+function selectSetByIndex(idx) {
+  const cat = document.getElementById("setCategory").value;
+  const set = SETS[cat] && SETS[cat][idx];
+  if (!set) return;
+  const input = document.getElementById("setNameInput");
+  input.value = set.name;
+  input.dataset.selectedIdx = String(idx);
+  document.getElementById("setComboClear").style.display = "flex";
+  closeSetMenu();
+  onSetChange();
+}
+
+function clearSetSelection() {
+  const input = document.getElementById("setNameInput");
+  input.value = "";
+  input.dataset.selectedIdx = "";
+  document.getElementById("setComboClear").style.display = "none";
+  document.getElementById("setMeta").style.display = "none";
+  hideArchetypes();
+  clearSpoiler();
+  input.focus();
+  renderSetMenu("");
+  openSetMenu();
+}
+
+// Close the menu when clicking outside
+document.addEventListener("click", (e) => {
+  const combo = document.getElementById("setCombo");
+  if (combo && !combo.contains(e.target)) closeSetMenu();
+});
 
 function onSetChange() {
   const cat = document.getElementById("setCategory").value;
-  const idx = document.getElementById("setName").value;
-  if (!cat || cat==="custom" || idx==="") { document.getElementById("setMeta").style.display="none"; hideArchetypes(); clearSpoiler(); return; }
-  const set = SETS[cat][parseInt(idx)];
+  const input = document.getElementById("setNameInput");
+  const idxStr = input.dataset.selectedIdx;
+  if (!cat || cat==="custom" || idxStr==="" || idxStr === undefined) {
+    document.getElementById("setMeta").style.display="none";
+    hideArchetypes();
+    clearSpoiler();
+    return;
+  }
+  const idx = parseInt(idxStr, 10);
+  const set = SETS[cat][idx];
   document.getElementById("packsPerBox").value = set.packs;
   const badge = document.getElementById("setBadge");
   badge.textContent = cat;
@@ -1854,19 +2191,39 @@ function recalc() {
   const ppp   = Math.max(1, parseInt(document.getElementById("packsPerPlayer").value) || 3);
   const pPerPk = price / ppb;
   const dPacks = np * ppp;
-  const boxes  = Math.ceil(dPacks / ppb);
-  const left   = boxes * ppb - dPacks;
-  const dCost  = dPacks * pPerPk;
   const prPks  = prizes.reduce((s,p) => s + (parseInt(p.packs)||0), 0);
+  const totalPacks = dPacks + prPks;                    // draft + prize packs combined
+  const boxes  = Math.ceil(totalPacks / ppb);           // boxes needed for the whole event
+  const left   = boxes * ppb - totalPacks;              // leftover from the boxes bought
+  const dCost  = dPacks * pPerPk;
   const total  = dCost + prPks * pPerPk;
+
   document.getElementById("m-ppp").textContent          = fmt(pPerPk);
-  document.getElementById("m-packs").textContent        = dPacks;
+  document.getElementById("m-packs").textContent        = totalPacks;
   document.getElementById("m-boxes-note").textContent   = boxes + (boxes===1?" box":" boxes") + " needed";
   document.getElementById("m-leftover").textContent     = left;
   document.getElementById("m-leftover-val").textContent = fmt(left*pPerPk) + " value";
   document.getElementById("grand-total").textContent    = fmt(total);
   document.getElementById("gt-per-player").textContent  = fmt(total/np) + " per player";
   document.getElementById("gt-breakdown").textContent   = fmt(dCost) + " draft  +  " + fmt(prPks*pPerPk) + " prizes (" + prPks + " packs)";
+
+  // Pack shortage warning: total demand exceeds a single box's capacity
+  const warn = document.getElementById("packWarning");
+  const detail = document.getElementById("packWarningDetail");
+  if (warn && detail) {
+    if (totalPacks > ppb) {
+      const overBy = totalPacks - ppb;
+      const extraBoxes = boxes - 1;
+      detail.innerHTML =
+        `You need <strong>${totalPacks} packs</strong> ` +
+        `(${dPacks} draft + ${prPks} prize) but each box contains only <strong>${ppb}</strong>. ` +
+        `That's <strong>${overBy} pack${overBy===1?'':'s'}</strong> beyond one box — ` +
+        `plan on buying <strong>${boxes} box${boxes===1?'':'es'}</strong> (${extraBoxes} extra beyond the first).`;
+      warn.style.display = "flex";
+    } else {
+      warn.style.display = "none";
+    }
+  }
 }
 
 function renderPrizeRows() {
@@ -2175,9 +2532,9 @@ async function fetchSetsViaProxy() {
 function applyLiveSets(newSets, sourceLabel) {
   // Preserve current selection
   const catEl = document.getElementById("setCategory");
-  const nameEl = document.getElementById("setName");
+  const inputEl = document.getElementById("setNameInput");
   const prevCat = catEl ? catEl.value : "";
-  const prevName = nameEl ? nameEl.selectedOptions[0]?.textContent : "";
+  const prevName = inputEl ? inputEl.value : "";
 
   // Replace global SETS
   for (const k of Object.keys(SETS)) delete SETS[k];
@@ -2192,12 +2549,9 @@ function applyLiveSets(newSets, sourceLabel) {
     if (opt) {
       catEl.value = prevCat;
       onCatChange();
-      if (prevName && nameEl) {
-        const idx = SETS[prevCat]?.findIndex(s => s.name === prevName);
-        if (idx >= 0 && idx !== -1) {
-          nameEl.value = String(idx);
-          onSetChange();
-        }
+      if (prevName && SETS[prevCat]) {
+        const idx = SETS[prevCat].findIndex(s => s.name === prevName);
+        if (idx >= 0) selectSetByIndex(idx);
       }
     }
   }
