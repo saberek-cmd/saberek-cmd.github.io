@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>MTG Draft Tools</title>
+<title>MTG Draft Cost Calculator</title>
 
 <!-- ── PWA meta ── -->
 <meta name="description" content="Price out Magic: The Gathering draft events — costs, prizes, set spoilers, archetypes, Swiss pairings, and a draft timer.">
@@ -393,6 +393,239 @@
     background: rgba(var(--accent-rgb),0.16);
     color: var(--accent-light);
   }
+  #searchPageBtn.active {
+    background: rgba(var(--accent-rgb),0.16);
+    color: var(--accent-light);
+  }
+
+  /* ── Search Page (dedicated card search view) ────────── */
+  body:not(.search-page) #searchMain { display: none; }
+  body.search-page main.container:not(#searchMain) { display: none; }
+  body.search-page .view-bar .vb-group:nth-of-type(2) { display: none; } /* hide layout toggle on search page */
+  body.search-page #draftModeBtn { display: none; }
+  body.search-page .site-header::after {
+    content: 'Search Page';
+    position: absolute; top: 12px; left: 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb),0.14);
+    border: 1px solid var(--accent-dim);
+    padding: 4px 10px;
+    border-radius: 20px;
+    z-index: 10;
+  }
+
+  /* Search page main container is wider */
+  #searchMain { max-width: 1400px; }
+
+  .search-hero {
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+  .search-mega-input-wrap {
+    position: relative;
+  }
+  .search-mega-icon {
+    position: absolute;
+    left: 20px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent);
+    font-size: 24px;
+    pointer-events: none;
+  }
+  .search-mega-input {
+    width: 100%;
+    background: var(--ink-mid);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-xl);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.3rem;
+    padding: 1rem 60px 1rem 58px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+  }
+  .search-mega-input:focus {
+    border-color: var(--accent-dim);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.14), var(--accent-glow);
+    background: var(--surface);
+  }
+  .search-mega-input::placeholder { color: var(--text-dim); font-style: italic; }
+  .search-mega-clear {
+    position: absolute;
+    right: 16px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-dim); cursor: pointer;
+    padding: 6px;
+    display: flex; align-items: center;
+    border-radius: 50%;
+    font-size: 20px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .search-mega-clear:hover { color: var(--ruby); background: rgba(176,48,80,0.12); }
+
+  .search-filters-bar {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  .search-filters-bar .filter-group {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+  }
+  .search-filters-bar label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+  .search-filters-bar select {
+    background: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    padding: 4px 24px 4px 10px;
+    outline: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    -webkit-appearance: none; appearance: none;
+  }
+
+  .search-sel-sets {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 10px 14px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-top: 10px;
+    min-height: 44px;
+    align-items: center;
+  }
+  .search-sel-sets.empty { color: var(--text-dim); font-style: italic; font-size: 0.9rem; }
+  .search-sel-sets .sel-set-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 6px 4px 10px;
+    background: rgba(var(--accent-rgb),0.14);
+    border: 1px solid var(--accent-dim);
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent-light);
+    text-transform: uppercase;
+  }
+  .search-sel-sets .sel-set-chip button {
+    background: none; border: none;
+    color: var(--accent-dim); cursor: pointer;
+    padding: 2px;
+    display: flex; align-items: center;
+    border-radius: 50%;
+  }
+  .search-sel-sets .sel-set-chip button:hover { color: var(--ruby); background: rgba(176,48,80,0.15); }
+
+  .search-set-picker {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .search-set-picker-input {
+    flex: 1;
+    min-width: 220px;
+    background: var(--ink-mid);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .search-set-picker-input:focus { border-color: var(--accent-dim); }
+  .search-set-picker-wrap { position: relative; flex: 1; min-width: 220px; }
+  .search-set-picker-menu {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; right: 0;
+    z-index: 60;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-deep);
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 5px;
+    display: none;
+  }
+  .search-set-picker-wrap.open .search-set-picker-menu { display: block; }
+  .search-set-picker-option {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+    padding: 7px 11px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .search-set-picker-option:hover { background: rgba(var(--accent-rgb),0.14); color: var(--accent-light); }
+  .search-set-picker-option.added { opacity: 0.55; font-style: italic; }
+  .search-set-picker-option .pick-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .search-set-picker-option .pick-year {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .search-status {
+    text-align: center;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    padding: 2rem 0;
+  }
+  .search-status.loading i { animation: spin 1s linear infinite; margin-right: 6px; }
+
+  .search-results-head {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    margin: 14px 0 10px;
+  }
+  .search-results-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+  }
+  .search-results-count strong { color: var(--accent-light); font-weight: 500; }
+
+  .search-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 480px) {
+    .search-card-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .search-mega-input { font-size: 1rem; padding: 0.75rem 50px 0.75rem 48px; }
+    .search-mega-icon { font-size: 18px; left: 16px; }
+  }
 
   /* ── Cost Summary wrapper (metrics + grand total) ─────── */
   .cost-summary { display: block; }
@@ -545,6 +778,19 @@
   /* ── Set selector row ─────────────────────────────────── */
   .set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
   @media (max-width: 520px) { .set-row { grid-template-columns: 1fr; } }
+
+  .refresh-sets-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px;
+    transition: all 0.15s;
+    margin-left: auto;
+  }
+  .refresh-sets-btn:hover { color: var(--accent); border-color: var(--accent-dim); background: rgba(var(--accent-rgb),0.08); }
+  .refresh-sets-btn.spinning i { animation: spin 0.8s linear infinite; }
 
   /* ── Multi-set selection chips ────────────────────────── */
   .multi-hint {
@@ -728,6 +974,7 @@
   .type-badge.draft    { color: #60d090; border-color: #2a9060; background: rgba(42,144,96,0.15); }
   .type-badge.jumpstart{ color: #e0a030; border-color: #a06820; background: rgba(160,104,32,0.15); }
   .type-badge.set      { color: #b070d8; border-color: #6838a0; background: rgba(144,80,200,0.15); }
+  .type-badge.collector{ color: #e8c96a; border-color: #a07828; background: rgba(201,168,76,0.14); }
   .set-year { color: var(--text-mid); font-size: 0.82rem; }
   .src-pill {
     margin-left: auto;
@@ -1123,14 +1370,14 @@
     width: 100%;
   }
   .card-set-badge {
-    position: relative;
-    bottom: 0px; left: 80px;
+    position: absolute;
+    bottom: 6px; left: 6px;
     font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    padding: 2px 3px;
-    border-radius: 5px;
+    padding: 3px 7px;
+    border-radius: 4px;
     background: rgba(13,13,18,0.85);
     border: 1px solid rgba(var(--accent-rgb),0.5);
     color: var(--accent-light);
@@ -1779,14 +2026,18 @@
     <i class="ti ti-cards"></i> <span class="vb-collapsible-label">Draft Mode</span>
   </button>
   <div class="vb-divider"></div>
+  <button id="searchPageBtn" class="vb-wide" onclick="toggleSearchPage()" title="Open the dedicated card search page">
+    <i class="ti ti-search"></i> <span class="vb-collapsible-label">Search Page</span>
+  </button>
+  <div class="vb-divider"></div>
   <button class="vb-wide" onclick="resetView()" title="Reset view to default">
     <i class="ti ti-rotate-2"></i> <span class="vb-collapsible-label">Reset View</span>
   </button>
 </div>
 
 <header class="site-header">
-  <h1 class="site-title">MTG Draft Tools</h1>
-  <p class="site-subtitle">Useful tools for your Magic: The Gathering draft event</p>
+  <h1 class="site-title">Draft Cost Calculator</h1>
+  <p class="site-subtitle">Plan your Magic: The Gathering draft event</p>
   <div class="header-rule"></div>
   <div class="theme-bar">
     <span class="theme-bar-label"><i class="ti ti-palette"></i></span>
@@ -1833,6 +2084,9 @@
       <span class="type-badge" id="setBadge"></span>
       <span class="set-year" id="setYear"></span>
       <span class="src-pill" id="srcTag" style="display:none"></span>
+      <button type="button" class="refresh-sets-btn" onclick="manualRefreshSets(this)" title="Refresh set list from Scryfall">
+        <i class="ti ti-refresh"></i>
+      </button>
     </div>
 
     <div id="archetypesSection" class="archetypes-wrap" style="display:none">
@@ -2031,6 +2285,91 @@
 
 </main>
 
+<!-- ── SEARCH PAGE ───────────────────────────────────────── -->
+<main class="container" id="searchMain">
+  <div class="panel">
+    <p class="section-label"><i class="ti ti-search"></i> Card Search — Open Scryfall Explorer</p>
+
+    <div class="search-hero">
+      <div class="search-mega-input-wrap">
+        <i class="ti ti-search search-mega-icon"></i>
+        <input type="text" id="searchMegaInput" class="search-mega-input"
+               placeholder="Search any card by name, type, oracle text, color, mana cost…"
+               autocomplete="off"
+               oninput="onSearchMegaInput()">
+        <button type="button" id="searchMegaClear" class="search-mega-clear" onclick="clearSearchMega()" style="display:none" aria-label="Clear search">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <div class="search-filters-bar">
+        <div class="filter-group">
+          <label for="searchSortMode">Sort:</label>
+          <select id="searchSortMode" onchange="runCardSearch()">
+            <option value="usd">Price (USD)</option>
+            <option value="usd_foil">Price (Foil)</option>
+            <option value="name">Name A–Z</option>
+            <option value="released">Release date</option>
+            <option value="rarity">Rarity</option>
+            <option value="cmc">Mana value</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchRarityFilter">Rarity:</label>
+          <select id="searchRarityFilter" onchange="runCardSearch()">
+            <option value="">Any</option>
+            <option value="mythic">Mythic</option>
+            <option value="rare">Rare</option>
+            <option value="uncommon">Uncommon</option>
+            <option value="common">Common</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchBoosterFilter">Booster:</label>
+          <select id="searchBoosterFilter" onchange="runCardSearch()">
+            <option value="">Any</option>
+            <option value="play">Play Booster</option>
+            <option value="draft">Draft Booster</option>
+            <option value="set">Set Booster</option>
+            <option value="collector">Collector Booster</option>
+            <option value="jumpstart">Jumpstart Booster</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="search-set-picker">
+        <div class="search-set-picker-wrap" id="searchSetPickerWrap">
+          <input type="text" id="searchSetPickerInput" class="search-set-picker-input"
+                 placeholder="Add sets to filter by (optional — unlimited)"
+                 autocomplete="off"
+                 oninput="onSearchSetPickerInput()"
+                 onfocus="openSearchSetPicker()"
+                 onkeydown="searchSetPickerKey(event)">
+          <div class="search-set-picker-menu" id="searchSetPickerMenu"></div>
+        </div>
+        <button type="button" class="btn-ghost" onclick="clearSearchSelectedSets()">
+          <i class="ti ti-x"></i> Clear sets
+        </button>
+      </div>
+
+      <div class="search-sel-sets empty" id="searchSelSets">No sets selected — searching all sets</div>
+    </div>
+
+    <div class="search-results-head" id="searchResultsHead" style="display:none">
+      <div class="search-results-count" id="searchResultsCount"></div>
+      <div class="pagination" id="searchPagination"></div>
+    </div>
+
+    <div id="searchResultsBody">
+      <div class="search-status">
+        <i class="ti ti-search" style="font-size:28px;display:block;margin-bottom:8px"></i>
+        <p>Type anything to search — card names, types, oracle text, mana costs, colors.</p>
+        <p style="font-size:0.82rem;margin-top:6px;opacity:0.75">Example: <code style="font-family:'JetBrains Mono',monospace;background:var(--ink-mid);padding:2px 6px;border-radius:4px">dragon</code>, <code style="font-family:'JetBrains Mono',monospace;background:var(--ink-mid);padding:2px 6px;border-radius:4px">t:elf</code>, <code style="font-family:'JetBrains Mono',monospace;background:var(--ink-mid);padding:2px 6px;border-radius:4px">c:ub</code>, <code style="font-family:'JetBrains Mono',monospace;background:var(--ink-mid);padding:2px 6px;border-radius:4px">cmc=3</code></p>
+      </div>
+    </div>
+  </div>
+</main>
+
 <footer class="site-footer">
   Magic: The Gathering is &copy; Wizards of the Coast &nbsp;·&nbsp;
   Card data &amp; images via <span>Scryfall</span> &nbsp;·&nbsp;
@@ -2161,11 +2500,11 @@ function hideArchetypes() {
   if (s) s.style.display = "none";
 }
 
-const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Booster":"set", "Jumpstart Booster":"jumpstart" };
+const BADGE_CLS    = { "Play Booster":"play", "Draft Booster":"draft", "Set Booster":"set", "Collector Booster":"collector", "Jumpstart Booster":"jumpstart" };
 const RARITY_ORDER = { mythic:0, rare:1, uncommon:2, common:3 };
 const RARITY_CLS   = { mythic:"rarity-mythic", rare:"rarity-rare", uncommon:"rarity-uncommon", common:"rarity-common" };
 
-let prizes = [{ place:"1st", packs:3 }, { place:"2nd", packs:2 }, { place:"3rd", packs:1 }];
+let prizes = [{ place:"1st", packs:6 }, { place:"2nd", packs:4 }, { place:"3rd–4th", packs:2 }];
 let allCards = [], filteredCards = [];
 let currentPage = 1;
 const PAGE_SIZE = 8;
@@ -2335,7 +2674,7 @@ function renderSelectedChips() {
   container.innerHTML = list.map((idx, i) => {
     const s = SETS[cat][idx];
     if (!s) return "";
-    return `<span class="set-chip${i===0?' primary':''}" title="${i===0?'Primary set — drives calculator, and archetypes':'Additional reference set'}">
+    return `<span class="set-chip${i===0?' primary':''}" title="${i===0?'Primary set — drives calculator, spoiler, and archetypes':'Additional reference set'}">
       <span class="chip-name">${tEscBasic(s.name)}</span>
       <button type="button" class="chip-remove" onclick="removeSetSelection(${idx})" aria-label="Remove ${tEscBasic(s.name)}"><i class="ti ti-x"></i></button>
     </span>`;
@@ -2793,8 +3132,8 @@ recalc();
 //  Caches results in localStorage for 24h; falls back to the
 //  hardcoded SETS if the fetch fails (offline / blocked).
 // ════════════════════════════════════════════════════════════
-const SETS_CACHE_KEY = "mtg-sets-cache-v2";
-const SETS_TTL_MS = 24 * 60 * 60 * 1000;   // 24 hours
+const SETS_CACHE_KEY = "mtg-sets-cache-v3";
+const SETS_TTL_MS = 6 * 60 * 60 * 1000;   // 6 hours (was 24) so fresh sets appear sooner
 
 // Categorize a Scryfall set into our booster type + packs/box.
 // Returns null to skip (digital-only, non-draftable, etc.).
@@ -2823,25 +3162,37 @@ function classifyScryfallSet(s) {
     return { category: "Jumpstart Booster", entry: { name, year: yearLabel, packs: 24, code, _sort: yyyymm } };
   }
 
+  // Collector Boosters launched Sep 2019 (Throne of Eldraine) and have been standard for
+  // premier expansions since. 12 packs/box.
+  const collectorEligible = yyyymm >= 201910 &&
+    (s.set_type === "expansion" || s.set_type === "core" || s.set_type === "draft_innovation" || s.set_type === "masters" || s.set_type === "funny");
+
   // Play Booster era: Murders at Karlov Manor (Feb 2024) onward
   if (yyyymm >= 202402) {
-    // 36 packs/box for early 2024 Play Boosters, 30 for Feb 2025 onward
     const packs = yyyymm >= 202502 ? 30 : 36;
-    return { category: "Play Booster", entry: { name, year: yearLabel, packs, code, _sort: yyyymm } };
+    const out = [{ category: "Play Booster", entry: { name, year: yearLabel, packs, code, _sort: yyyymm } }];
+    if (collectorEligible) out.push({ category: "Collector Booster", entry: { name, year: yearLabel, packs: 12, code, _sort: yyyymm } });
+    return out;
   }
 
-  // Set Booster era: Zendikar Rising (Sep 2020) through Jan 2024 (LCI Nov 2023)
-  // Same sets also had Draft Boosters available.
-  // We surface the Draft Booster list for that era (36 packs/box, the more common draft product).
+  // Set Booster era: Zendikar Rising (Sep 2020) through Jan 2024
   if (yyyymm >= 202009 && yyyymm <= 202401) {
-    return [
+    const out = [
       { category: "Draft Booster",  entry: { name, year: yearLabel, packs: 36, code, _sort: yyyymm } },
       { category: "Set Booster",    entry: { name, year: yearLabel, packs: 30, code, _sort: yyyymm } },
     ];
+    if (collectorEligible) out.push({ category: "Collector Booster", entry: { name, year: yearLabel, packs: 12, code, _sort: yyyymm } });
+    return out;
   }
 
-  // Pre-Set-Booster era: Draft Booster only, 36 packs/box.
-  // Limit how far back we go to keep the list manageable (last ~20 years pre-2020).
+  // Pre-Set-Booster era with Collector Boosters (Sep 2019 – Aug 2020): Draft + Collector
+  if (yyyymm >= 201909 && yyyymm <= 202008) {
+    const out = [{ category: "Draft Booster", entry: { name, year: yearLabel, packs: 36, code, _sort: yyyymm } }];
+    if (collectorEligible) out.push({ category: "Collector Booster", entry: { name, year: yearLabel, packs: 12, code, _sort: yyyymm } });
+    return out;
+  }
+
+  // Older: Draft only
   if (yyyymm >= 200001) {
     return { category: "Draft Booster", entry: { name, year: yearLabel, packs: 36, code, _sort: yyyymm } };
   }
@@ -2849,7 +3200,7 @@ function classifyScryfallSet(s) {
 }
 
 function buildSetsFromScryfall(scryfallSets) {
-  const out = { "Play Booster": [], "Draft Booster": [], "Set Booster": [], "Jumpstart Booster": [] };
+  const out = { "Play Booster": [], "Draft Booster": [], "Set Booster": [], "Collector Booster": [], "Jumpstart Booster": [] };
   for (const s of scryfallSets) {
     const cls = classifyScryfallSet(s);
     if (!cls) continue;
@@ -2878,6 +3229,10 @@ function readSetsCache() {
 }
 
 function writeSetsCache(data) {
+  // Don't cache empty or degenerate results — that would poison the cache for 6h
+  if (!data || typeof data !== "object") return;
+  const total = Object.values(data).reduce((n, arr) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+  if (total < 20) return;
   try { localStorage.setItem(SETS_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch (_) {}
 }
 
@@ -2891,7 +3246,13 @@ async function fetchSetsDirect() {
 }
 
 async function fetchSetsViaProxy() {
-  const prompt = `Call https://api.scryfall.com/sets and return ONLY a valid JSON array (no markdown, no commentary). Each element must have: { "code": string, "name": string, "released_at": string YYYY-MM-DD, "set_type": string, "card_count": number, "digital": boolean }. Return ALL sets, not just recent ones.`;
+  const currentYear = new Date().getFullYear();
+  const prompt = `Fetch the current list of Magic: The Gathering sets from https://api.scryfall.com/sets
+
+Return ONLY a valid JSON array (no markdown fences, no commentary before or after). Include AT LEAST every set released from 2018 onward, plus every announced upcoming set through ${currentYear + 1}. Each element must have exactly these fields:
+{ "code": string, "name": string, "released_at": string in YYYY-MM-DD format, "set_type": string, "card_count": number, "digital": boolean }
+
+Do not filter — include ALL set types (expansion, core, masters, draft_innovation, funny, commander, etc.). Do not summarize or truncate. If Scryfall returns 100+ sets in that date range, include all of them. Focus on completeness over recency.`;
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -2953,31 +3314,382 @@ function applyLiveSets(newSets, sourceLabel) {
 }
 
 async function refreshSetsFromScryfall() {
-  // 1) Try cache first for instant load
+  // 1) Try cache first for instant load (but always refresh in background below)
   const cached = readSetsCache();
   if (cached) {
     applyLiveSets(cached, "cached");
   }
 
-  // 2) Refresh in the background (or fetch fresh if no cache)
+  // 2) Always attempt a fresh fetch in the background so new sets appear
+  //    the moment WotC/Scryfall publishes them, not 24h later.
+  let raw = null, source = "", errors = [];
   try {
-    let raw, source;
-    try { raw = await fetchSetsDirect(); source = "scryfall"; }
-    catch (e1) {
-      try { raw = await fetchSetsViaProxy(); source = "via proxy"; }
-      catch (e2) {
-        if (!cached) console.warn("Live sets unavailable; using bundled list. " + e1.message + " / " + e2.message);
-        return;
-      }
+    raw = await fetchSetsDirect();
+    source = "scryfall live";
+  } catch (e1) {
+    errors.push("direct: " + e1.message);
+    try {
+      raw = await fetchSetsViaProxy();
+      source = "via proxy";
+    } catch (e2) {
+      errors.push("proxy: " + e2.message);
     }
-    const built = buildSetsFromScryfall(raw);
-    writeSetsCache(built);
-    applyLiveSets(built, source);
-  } catch (e) { /* silent — bundled SETS are the fallback */ }
+  }
+
+  if (!raw) {
+    if (!cached) console.warn("Live sets unavailable; using bundled list. " + errors.join(" / "));
+    return;
+  }
+
+  const built = buildSetsFromScryfall(raw);
+  const total = Object.values(built).reduce((n, arr) => n + arr.length, 0);
+  if (total < 20) {
+    console.warn("Live sets fetch returned too few results (" + total + "); keeping bundled/cached list.");
+    return;
+  }
+  writeSetsCache(built);
+  applyLiveSets(built, source);
 }
 
 // Kick off the refresh after initial render
 refreshSetsFromScryfall();
+
+// Manual refresh handler — forces a fresh fetch bypassing cache
+async function manualRefreshSets(btn) {
+  if (btn) btn.classList.add("spinning");
+  try { localStorage.removeItem(SETS_CACHE_KEY); } catch (_) {}
+  await refreshSetsFromScryfall();
+  if (btn) {
+    btn.classList.remove("spinning");
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="ti ti-check"></i>';
+    setTimeout(() => { btn.innerHTML = orig; }, 1200);
+  }
+}
+window.manualRefreshSets = manualRefreshSets;
+
+
+
+// ════════════════════════════════════════════════════════════
+//  SEARCH PAGE — dedicated open-ended Scryfall card search
+// ════════════════════════════════════════════════════════════
+let searchPageActive = false;
+let searchAllCards = [];
+let searchFiltered = [];
+let searchPage = 1;
+const SEARCH_PAGE_SIZE = 24;
+let searchDebounceTimer = null;
+let searchActiveRequestId = 0;
+let searchSelectedSets = [];
+
+function toggleSearchPage() {
+  searchPageActive = !searchPageActive;
+  document.body.classList.toggle("search-page", searchPageActive);
+  const btn = document.getElementById("searchPageBtn");
+  if (btn) {
+    btn.classList.toggle("active", searchPageActive);
+    const lbl = btn.querySelector(".vb-collapsible-label");
+    if (lbl) lbl.textContent = searchPageActive ? "Exit Search" : "Search Page";
+  }
+  if (searchPageActive) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      const mega = document.getElementById("searchMegaInput");
+      if (mega) mega.focus();
+    }, 200);
+  }
+  try { localStorage.setItem("mtg-search-page-active", searchPageActive ? "1" : "0"); } catch (_) {}
+}
+window.toggleSearchPage = toggleSearchPage;
+
+function onSearchMegaInput() {
+  const q = document.getElementById("searchMegaInput").value;
+  document.getElementById("searchMegaClear").style.display = q ? "flex" : "none";
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(runCardSearch, 350);
+}
+window.onSearchMegaInput = onSearchMegaInput;
+
+function clearSearchMega() {
+  const inp = document.getElementById("searchMegaInput");
+  inp.value = "";
+  document.getElementById("searchMegaClear").style.display = "none";
+  runCardSearch();
+  inp.focus();
+}
+window.clearSearchMega = clearSearchMega;
+
+function buildScryfallQuery() {
+  const text = document.getElementById("searchMegaInput").value.trim();
+  const rarity = document.getElementById("searchRarityFilter").value;
+  const parts = [];
+  if (text) parts.push(text);
+  if (rarity) parts.push("r:" + rarity);
+  if (searchSelectedSets.length > 0) {
+    parts.push("(" + searchSelectedSets.map(s => "e:" + s).join(" or ") + ")");
+  }
+  parts.push("-is:token");
+  parts.push("-is:art_series");
+  return parts.join(" ");
+}
+
+async function runCardSearch() {
+  const text = document.getElementById("searchMegaInput").value.trim();
+  const hasFilters = text || searchSelectedSets.length > 0;
+  if (!hasFilters) {
+    document.getElementById("searchResultsBody").innerHTML =
+      '<div class="search-status"><i class="ti ti-search" style="font-size:28px;display:block;margin-bottom:8px"></i><p>Type anything to search — card names, types, oracle text, mana costs, colors.</p></div>';
+    document.getElementById("searchResultsHead").style.display = "none";
+    searchAllCards = []; searchFiltered = [];
+    return;
+  }
+  const q = buildScryfallQuery();
+  const reqId = ++searchActiveRequestId;
+  document.getElementById("searchResultsBody").innerHTML =
+    '<div class="search-status loading"><i class="ti ti-loader-2"></i> Searching Scryfall…</div>';
+  document.getElementById("searchResultsHead").style.display = "none";
+
+  const sort = document.getElementById("searchSortMode").value;
+  const order = sort === "released" ? "released"
+             : sort === "cmc"      ? "cmc"
+             : sort === "name"     ? "name"
+             : sort === "rarity"   ? "rarity"
+             : sort === "usd_foil" ? "usd" : "usd";
+  const dir = sort === "name" ? "asc" : "desc";
+
+  try {
+    const cards = await searchFetchDirect(q, order, dir);
+    if (reqId !== searchActiveRequestId) return;
+    searchAllCards = cards;
+    applySearchClientFilters();
+  } catch (e) {
+    if (reqId !== searchActiveRequestId) return;
+    if (/404/.test(e.message)) {
+      document.getElementById("searchResultsBody").innerHTML =
+        '<div class="search-status"><i class="ti ti-mood-sad" style="font-size:28px;display:block;margin-bottom:8px"></i><p>No cards matched your search.</p><p style="font-size:0.82rem;margin-top:6px;opacity:0.75">Try different terms or clear filters.</p></div>';
+      searchAllCards = []; searchFiltered = [];
+      return;
+    }
+    document.getElementById("searchResultsBody").innerHTML =
+      '<div class="search-status" style="color:var(--ruby)"><i class="ti ti-alert-circle" style="font-size:28px;display:block;margin-bottom:8px"></i><p>Search failed: ' + esc(e.message) + '</p></div>';
+  }
+}
+window.runCardSearch = runCardSearch;
+
+async function searchFetchDirect(q, order, dir) {
+  const url = "https://api.scryfall.com/cards/search?q=" + encodeURIComponent(q) +
+              "&order=" + order + "&dir=" + dir + "&unique=cards&page=1";
+  const res = await fetch(url, { headers: { "Accept": "application/json" } });
+  if (!res.ok) throw new Error("Scryfall HTTP " + res.status);
+  const data = await res.json();
+  if (!data.data) throw new Error("Unexpected response shape");
+  return data.data.map(c => ({
+    name: c.name,
+    rarity: c.rarity,
+    set: c.set,
+    set_name: c.set_name,
+    released_at: c.released_at,
+    image_uri: c.image_uris?.border_crop || c.card_faces?.[0]?.image_uris?.border_crop || "",
+    scryfall_uri: c.scryfall_uri || "",
+    usd: c.prices?.usd || null,
+    usd_foil: c.prices?.usd_foil || null,
+    cmc: c.cmc,
+    booster: !!c.booster,
+    _raw: c,
+  }));
+}
+
+function applySearchClientFilters() {
+  const boosterFilter = document.getElementById("searchBoosterFilter").value;
+  searchFiltered = searchAllCards.filter(c => {
+    if (!boosterFilter) return true;
+    const code = (c.set || "").toLowerCase();
+    for (const cat of Object.keys(SETS)) {
+      const sets = SETS[cat] || [];
+      if (!sets.some(s => (s.code || "").toLowerCase() === code)) continue;
+      if (boosterFilter === "play"      && cat === "Play Booster") return true;
+      if (boosterFilter === "draft"     && cat === "Draft Booster") return true;
+      if (boosterFilter === "set"       && cat === "Set Booster") return true;
+      if (boosterFilter === "jumpstart" && cat === "Jumpstart Booster") return true;
+      if (boosterFilter === "collector" && cat === "Collector Booster") return true;
+    }
+    if (boosterFilter === "collector" && c._raw && c._raw.booster === false) return true;
+    return false;
+  });
+  searchPage = 1;
+  renderSearchResults();
+}
+
+function renderSearchResults() {
+  const total = searchFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE));
+  if (searchPage > totalPages) searchPage = totalPages;
+  const slice = searchFiltered.slice((searchPage - 1) * SEARCH_PAGE_SIZE, searchPage * SEARCH_PAGE_SIZE);
+  const sort = document.getElementById("searchSortMode").value;
+
+  if (total === 0) {
+    document.getElementById("searchResultsBody").innerHTML =
+      '<div class="search-status"><i class="ti ti-mood-sad" style="font-size:28px;display:block;margin-bottom:8px"></i><p>No cards matched your filters.</p></div>';
+    document.getElementById("searchResultsHead").style.display = "none";
+    return;
+  }
+
+  document.getElementById("searchResultsHead").style.display = "flex";
+  document.getElementById("searchResultsCount").innerHTML =
+    "<strong>" + total + "</strong> card" + (total === 1 ? "" : "s") +
+    " · Page <strong>" + searchPage + "</strong> of <strong>" + totalPages + "</strong>";
+  document.getElementById("searchPagination").innerHTML =
+    '<button class="pg-btn" onclick="searchGoPage(' + (searchPage - 1) + ')" ' + (searchPage <= 1 ? "disabled" : "") + ' aria-label="Previous"><i class="ti ti-chevron-left"></i> Prev</button>' +
+    '<button class="pg-btn" onclick="searchGoPage(' + (searchPage + 1) + ')" ' + (searchPage >= totalPages ? "disabled" : "") + ' aria-label="Next">Next <i class="ti ti-chevron-right"></i></button>';
+
+  const RARITY_CLS_LOCAL = { mythic: "rarity-mythic", rare: "rarity-rare", uncommon: "rarity-uncommon", common: "rarity-common" };
+  let h = '<div class="search-card-grid">';
+  slice.forEach(card => {
+    const priceVal = sort === "usd_foil" ? card.usd_foil : (card.usd || card.usd_foil);
+    const priceStr = priceVal ? "$" + parseFloat(priceVal).toFixed(2) : "—";
+    const foilNote = sort === "usd_foil" && card.usd_foil ? " foil" :
+                     (!card.usd && card.usd_foil ? " (foil)" : "");
+    const rCls = RARITY_CLS_LOCAL[card.rarity] || "rarity-common";
+    const setCode = (card.set || "").toUpperCase();
+    h += '<div class="card-tile" onclick="window.open(\'' + esc(card.scryfall_uri) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + esc(card.name) + ', ' + card.rarity + ', ' + priceStr + '">';
+    h += '<div class="card-image-wrap">';
+    h += card.image_uri
+      ? '<img src="' + esc(card.image_uri) + '" alt="' + esc(card.name) + '" loading="lazy">'
+      : '<div class="skeleton"></div>';
+    if (setCode) h += '<span class="card-set-badge">' + esc(setCode) + '</span>';
+    h += '</div>';
+    h += '<span class="card-name">' + esc(card.name) + '</span>' +
+         '<span class="card-price">' + esc(priceStr + foilNote) + '</span>' +
+         '<span class="card-rarity ' + rCls + '">' + esc(card.rarity) + '</span>' +
+         '</div>';
+  });
+  h += '</div>';
+  document.getElementById("searchResultsBody").innerHTML = h;
+}
+
+function searchGoPage(p) {
+  const tp = Math.max(1, Math.ceil(searchFiltered.length / SEARCH_PAGE_SIZE));
+  searchPage = Math.max(1, Math.min(p, tp));
+  renderSearchResults();
+  const head = document.getElementById("searchResultsHead");
+  if (head) window.scrollTo({ top: head.offsetTop - 20, behavior: "smooth" });
+}
+window.searchGoPage = searchGoPage;
+
+function renderSearchSelectedSets() {
+  const box = document.getElementById("searchSelSets");
+  if (!box) return;
+  if (searchSelectedSets.length === 0) {
+    box.className = "search-sel-sets empty";
+    box.textContent = "No sets selected — searching all sets";
+    return;
+  }
+  box.className = "search-sel-sets";
+  box.innerHTML = searchSelectedSets.map(code =>
+    '<span class="sel-set-chip">' + esc(code.toUpperCase()) +
+    '<button onclick="removeSearchSet(\'' + esc(code) + '\')" aria-label="Remove ' + esc(code) + '"><i class="ti ti-x"></i></button></span>'
+  ).join("");
+}
+
+function addSearchSet(code) {
+  code = (code || "").toLowerCase();
+  if (!code) return;
+  if (searchSelectedSets.includes(code)) return;
+  searchSelectedSets.push(code);
+  renderSearchSelectedSets();
+  runCardSearch();
+}
+window.addSearchSet = addSearchSet;
+
+function removeSearchSet(code) {
+  searchSelectedSets = searchSelectedSets.filter(c => c !== code);
+  renderSearchSelectedSets();
+  runCardSearch();
+}
+window.removeSearchSet = removeSearchSet;
+
+function clearSearchSelectedSets() {
+  searchSelectedSets = [];
+  renderSearchSelectedSets();
+  runCardSearch();
+}
+window.clearSearchSelectedSets = clearSearchSelectedSets;
+
+function onSearchSetPickerInput() {
+  renderSearchSetPickerMenu(document.getElementById("searchSetPickerInput").value);
+  openSearchSetPicker();
+}
+window.onSearchSetPickerInput = onSearchSetPickerInput;
+
+function openSearchSetPicker() {
+  const wrap = document.getElementById("searchSetPickerWrap");
+  if (wrap) wrap.classList.add("open");
+  if (!document.getElementById("searchSetPickerInput").value) {
+    renderSearchSetPickerMenu("");
+  }
+}
+window.openSearchSetPicker = openSearchSetPicker;
+
+function closeSearchSetPicker() {
+  const wrap = document.getElementById("searchSetPickerWrap");
+  if (wrap) wrap.classList.remove("open");
+}
+
+function renderSearchSetPickerMenu(query) {
+  const menu = document.getElementById("searchSetPickerMenu");
+  if (!menu) return;
+  const q = (query || "").toLowerCase().trim();
+  const seen = new Set();
+  const all = [];
+  for (const cat of Object.keys(SETS)) {
+    (SETS[cat] || []).forEach(s => {
+      const code = (s.code || "").toLowerCase();
+      if (!code || seen.has(code)) return;
+      seen.add(code);
+      all.push({ code: code, name: s.name, year: s.year, category: cat });
+    });
+  }
+  const results = all.filter(s =>
+    !q || s.name.toLowerCase().includes(q) || s.code.includes(q)
+  ).slice(0, 50);
+  if (results.length === 0) {
+    menu.innerHTML = '<div class="set-combo-empty">No sets match "' + esc(q) + '"</div>';
+    return;
+  }
+  menu.innerHTML = results.map(s => {
+    const added = searchSelectedSets.includes(s.code);
+    return '<div class="search-set-picker-option' + (added ? ' added' : '') +
+      '" onclick="addSearchSet(\'' + esc(s.code) + '\'); document.getElementById(\'searchSetPickerInput\').value=\'\'; closeSearchSetPicker();">' +
+      '<span>' + esc(s.name) + '</span>' +
+      '<span><span class="pick-code">' + esc(s.code.toUpperCase()) + '</span> <span class="pick-year">' + esc(s.year || '') + '</span></span>' +
+      '</div>';
+  }).join("");
+}
+
+function searchSetPickerKey(e) {
+  if (e.key === "Escape") closeSearchSetPicker();
+  if (e.key === "Enter") {
+    e.preventDefault();
+    const first = document.querySelector(".search-set-picker-option:not(.added)");
+    if (first) first.click();
+  }
+}
+window.searchSetPickerKey = searchSetPickerKey;
+
+document.addEventListener("click", (e) => {
+  const wrap = document.getElementById("searchSetPickerWrap");
+  if (wrap && !wrap.contains(e.target)) closeSearchSetPicker();
+});
+
+renderSearchSelectedSets();
+
+(function restoreSearchPageState() {
+  try {
+    if (localStorage.getItem("mtg-search-page-active") === "1") {
+      setTimeout(() => toggleSearchPage(), 150);
+    }
+  } catch (_) {}
+})();
 
 
 const THEMES = [
@@ -3689,8 +4401,8 @@ updateTimerDisplay();
 
   // ── Web App Manifest (as Blob) ──
   const manifest = {
-    name: "MTG Draft Tools",
-    short_name: "Draft Tools",
+    name: "MTG Draft Cost Calculator",
+    short_name: "Draft Calc",
     description: "Price out Magic: The Gathering draft events, prizes, spoilers, archetypes, pairings, and a timer.",
     start_url: ".",
     scope: ".",
@@ -3982,6 +4694,10 @@ updateTimerDisplay();
     applyFont();
     applyLayout();
     applyDraftMode();
+    // Also turn off search page if it's active
+    if (document.body.classList.contains("search-page") && typeof window.toggleSearchPage === "function") {
+      window.toggleSearchPage();
+    }
     // Clear saved section order and restore source order
     try { localStorage.removeItem("mtg-section-order"); } catch (_) {}
     if (typeof window.__restoreModuleSourceOrder === "function") {
